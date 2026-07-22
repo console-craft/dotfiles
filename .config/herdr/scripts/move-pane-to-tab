@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tab_number="${1:?usage: move-pane-to-tab <tab-number>}"
+
+herdr_bin="${HERDR_BIN_PATH:-herdr}"
+workspace_id="${HERDR_ACTIVE_WORKSPACE_ID:?no active Herdr workspace}"
+pane_id="${HERDR_ACTIVE_PANE_ID:?no active Herdr pane}"
+
+tab_id="$(
+  "$herdr_bin" tab list --workspace "$workspace_id" |
+    jq -r --argjson index "$((tab_number - 1))" \
+      '.result.tabs[$index].tab_id // empty'
+)"
+
+if [[ -z "$tab_id" ]]; then
+  exit 0
+fi
+
+current_tab_id="$(
+  "$herdr_bin" pane get "$pane_id" |
+    jq -r '.result.pane.tab_id // empty'
+)"
+
+# Already inside the requested tab.
+if [[ "$tab_id" == "$current_tab_id" ]]; then
+  exit 0
+fi
+
+"$herdr_bin" pane move "$pane_id" \
+  --tab "$tab_id" \
+  --split right \
+  --focus
+

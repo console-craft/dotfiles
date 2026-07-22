@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+herdr_bin="${HERDR_BIN_PATH:-herdr}"
+workspace_id="${HERDR_ACTIVE_WORKSPACE_ID:?no active Herdr workspace}"
+pane_id="${HERDR_ACTIVE_PANE_ID:?no active Herdr pane}"
+
+exec "$herdr_bin" pane move "$pane_id" \
+  --new-tab \
+  --workspace "$workspace_id" \
+  --focus
+

@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import socket
+import sys
+import time
+
+
+def request(socket_path, method, params):
+    payload = {
+        "id": f"move-tab:{time.time_ns()}",
+        "method": method,
+        "params": params,
+    }
+
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.settimeout(2)
+        client.connect(socket_path)
+        client.sendall((json.dumps(payload) + "\n").encode())
+        response = json.loads(client.makefile("r", encoding="utf-8").readline())
+
+    if "error" in response:
+        error = response["error"]
+        raise RuntimeError(error.get("message", str(error)))
+    return response["result"]
+
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in {"left", "right"}:
+        raise SystemExit("usage: move-tab <left|right>")
+
+    workspace_id = os.environ.get("HERDR_ACTIVE_WORKSPACE_ID")
+    tab_id = os.environ.get("HERDR_ACTIVE_TAB_ID")
+    socket_path = os.environ.get("HERDR_SOCKET_PATH")
+    if not workspace_id or not tab_id or not socket_path:
+        raise SystemExit("no active Herdr tab")
+
+    tabs = request(socket_path, "tab.list", {"workspace_id": workspace_id})["tabs"]
+    current_index = next(
+        (index for index, tab in enumerate(tabs) if tab["tab_id"] == tab_id),
+        None,
+    )
+    if current_index is None:
+        raise SystemExit("active tab not found in workspace")
+
+    if sys.argv[1] == "left":
+        if current_index == 0:
+            return
+        insert_index = current_index - 1
+    else:
+        if current_index == len(tabs) - 1:
+            return
+        # tab.move uses an insertion point in the pre-move tab list.
+        insert_index = current_index + 2
+
+    if not 0 <= insert_index <= len(tabs):
+        return
+
+    request(
+        socket_path,
+        "tab.move",
+        {"tab_id": tab_id, "insert_index": insert_index},
+    )
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (KeyError, OSError, ValueError, RuntimeError) as error:
+        raise SystemExit(f"move-tab: {error}") from error
+

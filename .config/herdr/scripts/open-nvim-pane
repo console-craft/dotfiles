@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+herdr_bin="${HERDR_BIN_PATH:-herdr}"
+pane_id="${HERDR_ACTIVE_PANE_ID:?no active Herdr pane}"
+
+new_pane_id="$(
+  "$herdr_bin" pane split "$pane_id" --direction right --focus |
+    jq -r '.result.pane.pane_id // empty'
+)"
+
+[[ -n "$new_pane_id" ]] || exit 1
+
+exec "$herdr_bin" pane run "$new_pane_id" \
+  "nvim; herdr pane close '$new_pane_id'"
