@@ -1,12 +1,25 @@
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 local act = wezterm.action
+local is_windows = wezterm.target_triple:find("windows", 1, true) ~= nil
+
+if is_windows then
+	config.default_domain = "WSL:FedoraLinux-44"
+end
+
+local function is_herdr(pane)
+	local process = pane:get_foreground_process_name() or ""
+	local process_name = process:match("([^/\\]+)$") or process
+	if process_name == "herdr" then
+		return true
+	end
+	local domain = pane:get_domain_name() or ""
+	return domain:find("^WSL:") ~= nil
+end
 
 local function send_herdr_key(sequence, key, mods)
 	return wezterm.action_callback(function(window, pane)
-		local process = pane:get_foreground_process_name() or ""
-		local process_name = process:match("([^/\\]+)$") or process
-		if process_name == "herdr" then
+		if is_herdr(pane) then
 			pane:send_text(sequence)
 		else
 			window:perform_action(act.SendKey({ key = key, mods = mods }), pane)
@@ -16,13 +29,13 @@ end
 
 config.color_scheme = "Gruvbox dark, soft (base16)"
 config.font = wezterm.font("JetBrains Mono")
-config.font_size = 10
+config.font_size = is_windows and 8 or 10
 config.window_background_opacity = 1.00
 config.window_decorations = "RESIZE"
 config.enable_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = true
 config.window_frame = {
-	font_size = 12.0,
+	font_size = is_windows and 9.0 or 12.0,
 }
 config.window_padding = { left = 5, right = 5, top = 5, bottom = 0 }
 config.colors = { cursor_bg = "#ffffff" }
@@ -47,11 +60,13 @@ config.keys = {
 
 -- Herdr cannot distinguish these modifiers in legacy terminal input. Send explicit Kitty sequences while preserving normal key handling elsewhere.
 local herdr_mods = "CTRL|ALT|CMD"
-for key in ("hjkl[]"):gmatch(".") do
+local herdr_keys = { "h", "j", "k", "l", "[", "]", "Enter" }
+for _, key in ipairs(herdr_keys) do
+	local codepoint = key == "Enter" and 13 or string.byte(key)
 	table.insert(config.keys, {
 		mods = herdr_mods,
 		key = key,
-		action = send_herdr_key(string.format("\x1b[%d;15u", string.byte(key)), key, herdr_mods),
+		action = send_herdr_key(string.format("\x1b[%d;15u", codepoint), key, herdr_mods),
 	})
 end
 
