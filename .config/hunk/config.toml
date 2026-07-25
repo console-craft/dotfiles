@@ -1,7 +1,7 @@
 theme = "custom"
 mode = "split"
 vcs = "git"
-watch = true
+# watch = true
 exclude_untracked = false
 line_numbers = true
 wrap_lines = false

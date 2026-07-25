@@ -12,4 +12,4 @@ new_pane_id="$(
 [[ -n "$new_pane_id" ]] || exit 1
 
 exec "$herdr_bin" pane run "$new_pane_id" \
-  "hunk diff; herdr pane close '$new_pane_id'"
+  "hunk diff --watch; herdr pane close '$new_pane_id'"

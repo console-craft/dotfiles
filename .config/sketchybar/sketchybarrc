@@ -1,0 +1,59 @@
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+sketchybar --bar position=top height=40 blur_radius=30 color=0x60000000
+
+default=(
+  padding_left=0
+  padding_right=0
+  icon.font="Hack Nerd Font:Bold:15.0"
+  label.font="Hack Nerd Font:Bold:12.0"
+  label.color=0xffd4be98
+  icon.color=0xff7daea3
+  icon.padding_left=4
+  icon.padding_right=4
+  label.padding_left=4
+  label.padding_right=4
+)
+
+sketchybar --default "${default[@]}"
+
+sketchybar --add item clock right \
+           --set clock update_freq=10 icon=  script="$PLUGIN_DIR/clock.sh" \
+           --add item volume right \
+           --set volume script="$PLUGIN_DIR/volume.sh" \
+           --subscribe volume volume_change \
+           --subscribe battery system_woke power_source_change \
+           --add item battery right \
+           --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
+           --add alias "Control Center,Disk_mini" right \
+           --set "Control Center,Disk_mini" icon=  alias.color=0xffd4be98 alias.scale=0.95 \
+           --add alias "Control Center,GPU_mini" right \
+           --set "Control Center,GPU_mini" icon= alias.color=0xffd4be98 alias.scale=0.95 \
+           --add alias "Control Center,RAM_mini" right \
+           --set "Control Center,RAM_mini" icon= alias.color=0xffd4be98 alias.scale=0.95 \
+           --add alias "Control Center,CPU_mini" right \
+           --set "Control Center,CPU_mini" icon=  alias.color=0xffd4be98 alias.scale=0.95
+
+sketchybar --update
+
+sketchybar --add event aerospace_workspace_change
+WORKSPACE_ICONS=("A" "S" "D" "F" "1" "2" "3" "4")
+for sid in "${WORKSPACE_ICONS[@]}"; do
+    sketchybar --add item space.$sid left \
+        --subscribe space.$sid aerospace_workspace_change \
+        --set space.$sid \
+        background.color=0xcc7daea3 \
+        background.corner_radius=4 \
+        background.height=20 \
+        background.drawing=off \
+        width=30 \
+        label="$sid" \
+        click_script="aerospace workspace $sid" \
+        script="$CONFIG_DIR/plugins/aerospace.sh $sid"
+done
+sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE="$(aerospace list-workspaces --focused)"
+
+sketchybar --add item front_app left \
+           --set front_app icon=󰖯  script="$PLUGIN_DIR/front_app.sh" \
+           --subscribe front_app front_app_switched
+

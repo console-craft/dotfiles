@@ -1,0 +1,54 @@
+[user]
+  name = Ovi Ispas
+  email = ovidiu.ispas@gmail.com
+[includeIf "gitdir:~/Projects/console-craft/"]
+  path = ~/.gitconfig-console-craft
+[init]
+  defaultBranch = main
+[pull]
+  rebase = true
+[rerere]
+  enabled = true
+[diff]
+  algorithm = patience
+  colorMoved = zebra
+  context = 1000
+[core]
+    pager = hunk pager
+
+; ; delta pager options (delta --help)
+; ; adjust context size: git diff -U3000
+; [core]
+;   pager = delta
+;
+; [interactive]
+;   diffFilter = delta --color-only --features=interactive
+;
+; [delta]
+;   ; features = side-by-side
+;   max-line-distance = 0.6
+;   word-diff-regex="\\w+"
+;   navigate = true
+;   dark = true
+;   syntax-theme = gruvbox-material
+;   line-numbers = true
+;   file-style="normal"
+;   file-decoration-style="#444444 ul"
+;   hunk-header-style="#7c6f64"
+;   hunk-header-decoration-style="none"
+;   line-numbers-left-style = "#333333"
+;   line-numbers-right-style = "#333333"
+;   line-numbers-minus-style = "#555b33"
+;   line-numbers-plus-style = "#8f9a53"
+;   line-numbers-zero-style = "#7c6f64"
+;   minus-style = "syntax #404426"
+;   minus-emph-style = "syntax #555b33"
+;   plus-style = "syntax #404426"
+;   plus-emph-style = "syntax #555b33"
+;   whitespace-error-style = "#8f9a53 reverse"
+;   paging = "always"
+;
+; [delta "interactive"]
+;   keep-plus-minus-markers = false
+; ; end delta pager options
+;
