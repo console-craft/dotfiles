@@ -1,0 +1,264 @@
+// Load with --load-config examples/2.jsonc
+// Note that you must replace the image path to an existing image to display it.
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "padding": {
+      "top": 1,
+      "left": 1
+    },
+    "color": {
+      "1": "blue",
+      "2": "blue"
+    }
+  },
+  "display": {
+    "separator": " -> "
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "outputColor": "90"
+    },
+    {
+      "type": "custom",
+      "format": "{#1} SYSTEM{#}:"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "os",
+      "key": "OS",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "bootmgr",
+      "key": "Boot Loader",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "kernel",
+      "key": "Kernel",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "initsystem",
+      "key": "Init System",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "packages",
+      "key": "Packages",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "processes",
+      "key": "Processes",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "wifi",
+      "key": "Connection",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "uptime",
+      "key": "Uptime",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "datetime",
+      "key": "Current Time ",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "custom",
+      "format": "{#1} SOFTWARE:{#}"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "lm",
+      "key": "Login Manager",
+      "keyColor": "green"
+    },
+    {
+      "type": "de",
+      "key": "Desktop",
+      "keyColor": "green"
+    },
+    {
+      "type": "wm",
+      "key": "Window Manager",
+      "keyColor": "green"
+    },
+    {
+      "type": "wmtheme",
+      "key": "WM Theme",
+      "keyColor": "green"
+    },
+    {
+      "type": "theme",
+      "key": "Theme",
+      "keyColor": "green"
+    },
+    {
+      "type": "wallpaper",
+      "key": "Wallpaper",
+      "keyColor": "green"
+    },
+    {
+      "type": "icons",
+      "key": "Icons",
+      "keyColor": "green"
+    },
+    {
+      "type": "font",
+      "key": "Font",
+      "keyColor": "green"
+    },
+    {
+      "type": "cursor",
+      "key": "Cursor",
+      "keyColor": "green"
+    },
+    {
+      "type": "terminal",
+      "key": "Terminal",
+      "keyColor": "green"
+    },
+    {
+      "type": "terminalfont",
+      "key": "Terminal Font",
+      "keyColor": "green"
+    },
+    {
+      "type": "shell",
+      "key": "Shell",
+      "keyColor": "green"
+    },
+    {
+      "type": "editor",
+      "key": "Editor",
+      "keyColor": "green"
+    },
+    {
+      "type": "colors",
+      "key": "Colors",
+      "symbol": "circle",
+      "keyColor": "green"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "custom",
+      "format": "{#1}󰌢 HARDWARE{#}:"
+    },
+    {
+      "type": "custom",
+      "format": ""
+    },
+    {
+      "type": "host",
+      "key": "PC",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "bios",
+      "key": "Bios (UEFI)",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "cpu",
+      "key": "CPU",
+      "temp": true,
+      "keyColor": "cyan"
+    },
+    {
+      "type": "cpuusage",
+      "key": "CPU Usage",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "memory",
+      "key": "Memory",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "swap",
+      "key": "Swap",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "disk",
+      "key": "Disk {#1}{#keys}{#}({1})",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "gpu",
+      "key": "GPU",
+      "temp": true,
+      "keyColor": "cyan"
+    },
+    {
+      "type": "vulkan",
+      "key": "Vulkan",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "opengl",
+      "key": "OpenGL",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "display",
+      "key": "Display",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "brightness",
+      "key": "Brightness",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "sound",
+      "key": "Sound",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "player",
+      "key": "Player",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "media",
+      "key": "Media",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "battery",
+      "key": "Battery",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "poweradapter",
+      "key": "Power",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "bluetooth",
+      "key": "Bluetooth",
+      "keyColor": "cyan"
+    }
+  ]
+}
