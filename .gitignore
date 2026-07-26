@@ -1,1 +1,7 @@
+# macOS
 .DS_Store
+
+# OpenCode installed dependencies and disposable runtime files
+/.config/opencode/node_modules/
+/.config/opencode/*.log
+/.config/opencode/*.tmp
