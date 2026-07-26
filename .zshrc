@@ -8,6 +8,9 @@ typeset -U PATH path
 # PATH and tool managers                    #
 #############################################
 
+# WSL Windows mount
+export WIN=/mnt/c/Users/OvidiuIspas
+
 # Personal scripts and user-installed CLI tools.
 [[ -d "$HOME/.local/bin" ]] &&
   path=("$HOME/.local/bin" $path)
@@ -176,3 +179,16 @@ fi
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
+
+#############################################
+# API Keys                                  #
+#############################################
+
+# Machine-local secrets. The file deliberately lives outside the dotfiles repo.
+private_shell_env="${XDG_CONFIG_HOME:-$HOME/.config}/private/shell-secrets.zsh"
+
+if [[ -r "$private_shell_env" ]]; then
+  source "$private_shell_env"
+fi
+
+unset private_shell_env
