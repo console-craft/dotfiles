@@ -1,3 +1,7 @@
+# NOTE: list and install agent integrations:
+#   - herdr integration status
+#   - herdr integration install <agent>
+
 onboarding = false
 
 [theme]
