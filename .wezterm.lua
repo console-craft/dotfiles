@@ -55,6 +55,7 @@ config.keys = {
 	-- Needed for sending this keybinds to Neovim, through Herdr
 	{ mods = "CTRL", key = "[", action = send_herdr_key("\x1b[91;5u", "[", "CTRL") },
 	{ mods = "CTRL", key = "/", action = send_herdr_key("\x1b[47;5u", "/", "CTRL") },
+	{ mods = "CTRL", key = "Enter", action = send_herdr_key("\x1b[13;5u", "Enter", "CTRL") },
 	{ mods = "ALT", key = "[", action = send_herdr_key("\x1b[91;3u", "[", "ALT") },
 }
 
