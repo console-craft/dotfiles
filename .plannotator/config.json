@@ -1,0 +1,13 @@
+{
+  "displayName": "Ovi Ispas",
+  "pfmReminder": true,
+  "diffOptions": {
+    "diffStyle": "split",
+    "diffIndicators": "bars",
+    "lineDiffType": "word-alt",
+    "showDiffBackground": true,
+    "lineBgIntensity": "subtle",
+    "expandUnchanged": true,
+    "hideWhitespace": false
+  }
+}
