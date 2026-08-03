@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+exec docker run \
+  --init \
+  --pull=always \
+  -i \
+  --rm \
+  -v "$HOME/.sonarlint/ssl/truststore.p12:/app/certs/truststore.p12:ro" \
+  -v "$PWD:/app/mcp-workspace:ro" \
+  -e SONARQUBE_TOKEN \
+  -e SONARQUBE_URL \
+  -e SONARQUBE_TOOLSET=analysis \
+  -e SONARQUBE_READ_ONLY=true \
+  -e SONARQUBE_DEBUG_ENABLED=true \
+  -e "JAVA_OPTS=-Djavax.net.ssl.trustStore=/app/certs/truststore.p12 -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=sonarlint" \
+  sonarsource/sonarqube-mcp

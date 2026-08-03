@@ -12,6 +12,8 @@ $nodejs$rust$golang$python$java$php\
 $line_break$character
 """
 
+scan_timeout = 500
+
 # Optional: makes long commands still readable if you ever add right_format later
 add_newline = true
 

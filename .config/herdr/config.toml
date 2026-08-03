@@ -10,7 +10,7 @@ auto_switch = false
 
 [theme.custom]
 accent = "#7daea3"      # Primary highlights and active borders
-panel_bg = "#33302e"    # Floating panels, overlays, and modals
+panel_bg = "#2a2928"    # Floating panels, overlays, and modals
 surface0 = "#3b3634"    # Selected and focused item backgrounds
 surface1 = "#4c4641"    # Hovered and active item backgrounds
 surface_dim = "#4c4641" # Dim surfaces and separators
@@ -29,6 +29,7 @@ peach = "#eead83"       # Interrupted states and warnings
 [ui]
 right_click_passthrough_modifier = "ctrl"
 prompt_new_tab_name = false
+host_cursor = "native"
 # hide_tab_bar_when_single_tab = true
 # agent_panel_sort = "spaces"
 # sidebar_collapsed_mode = "hidden"
@@ -76,10 +77,10 @@ next_agent = "ctrl+alt+cmd+l"
 
 # Tabs
 
-new_tab = "prefix+n"
+new_tab = "ctrl+alt+cmd+n"
 previous_tab = "ctrl+alt+cmd+["
 next_tab = "ctrl+alt+cmd+]"
-close_tab = "prefix+c"
+close_tab = "ctrl+alt+cmd+c"
 
 # Panes
 

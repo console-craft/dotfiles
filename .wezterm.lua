@@ -38,7 +38,11 @@ config.window_frame = {
 	font_size = is_windows and 9.0 or 12.0,
 }
 config.window_padding = { left = 5, right = 5, top = 5, bottom = 0 }
-config.colors = { cursor_bg = "#ffffff" }
+config.colors = {
+	cursor_bg = "#ffffff",
+	selection_bg = "#7daea3",
+	selection_fg = "#33302e",
+}
 
 config.disable_default_key_bindings = true
 
@@ -61,7 +65,7 @@ config.keys = {
 
 -- Herdr cannot distinguish these modifiers in legacy terminal input. Send explicit Kitty sequences while preserving normal key handling elsewhere.
 local herdr_mods = "CTRL|ALT|CMD"
-local herdr_keys = { "h", "j", "k", "l", "[", "]", "Enter" }
+local herdr_keys = { "h", "j", "k", "l", "n", "c", "[", "]", "Enter" }
 for _, key in ipairs(herdr_keys) do
 	local codepoint = key == "Enter" and 13 or string.byte(key)
 	table.insert(config.keys, {
