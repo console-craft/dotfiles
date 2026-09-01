@@ -198,20 +198,12 @@ Use surrounding source context when necessary to understand these structural fac
 
 Prefer answering specific questions over exploring the entire subsystem.
 
-For example:
+Keep the Change Map descriptive and render the Change Map using the compact form of the Codebase Explanations (`codebase-explanations`) skill's `Difference` template. The compact form of the `Difference` template has the following structure:
 
-```text
-Change Map
-
-- Payment retry behavior added to PaymentsTable.
-- New retryPayment API method introduced.
-- PaymentsTable now owns local retry state.
-- Existing PaymentService remains unchanged.
-- Query invalidation added after successful retry.
-- No new external dependencies.
-```
-
-Keep the Change Map descriptive.
+1. Summary
+2. Important consequences
+3. Diagram
+4. Differences
 
 Do not recommend changes.
 
