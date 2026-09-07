@@ -1,5 +1,12 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "@dietrichgebert/ponytail"
+  ],
+  "instructions": [
+    "~/.config/opencode/instructions/workflow-composition.md"
+  ],
   "mcp": {
     "sonarqube": {
       "type": "local",

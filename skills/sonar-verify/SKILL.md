@@ -1,12 +1,14 @@
 ---
-name: sonarqube-verify
-description: Validate locally changed source files with the SonarQube MCP server after implementing or modifying code.
+name: sonar-verify
+description: Use when the human explicitly invokes /sonar-verify to check locally changed source files with SonarQube. Never invoke automatically.
+disable-model-invocation: true
 ---
 
 # SonarQube verification
 
-Use this skill near the end of an implementation turn, after normal project
-formatters, linters, type checks, and focused tests have run.
+Run this workflow only for the current explicit `/sonar-verify` invocation. Do
+not invoke it automatically after code changes. Normal project formatters,
+linters, type checks, and focused tests should run first.
 
 ## Goal
 

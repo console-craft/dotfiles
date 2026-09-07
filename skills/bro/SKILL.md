@@ -1,6 +1,6 @@
 ---
 name: bro
-description: Restate the last message in plain human language, with no jargon and shape output for a reader with ADHD. Lead with the next action, number multi-step work, restate state across turns, suppress tangents, give specific time estimates, make wins visible. Invoke with /bro; stays on until "stop bro mode".
+description: Use when the human explicitly invokes /bro because the immediately previous assistant response was unclear. Never invoke automatically.
 disable-model-invocation: true
 ---
 
@@ -8,11 +8,9 @@ disable-model-invocation: true
 
 Wait, I don't understand what you are saying here and what is actionable for me. Restate your last message. Stop using jargon and speak coherently. State it more simply and concisely, like one human talking to another. Give me a little bit of context, talk in ASD-STE100 Simplified Technical English. The reader has ADHD. Output is not just brief. It is shaped so an ADHD brain can act on it.
 
-## Persistence
+## Scope
 
-These rules apply to every response for the rest of the session, not only this one. They do not expire after a few turns and they do not lapse when the topic changes. If you are unsure whether they still apply, they do.
-
-Turn them off only when the reader says "stop bro mode" or "normal mode". Confirm in one line, then return to your default style.
+Apply these rules only to the response produced for the current `/bro` invocation. Restate the immediately previous assistant response, then expire. Do not apply Bro to later responses unless the human invokes `/bro` again.
 
 ## What this skill changes about reading
 
@@ -66,9 +64,9 @@ Good: "Here's the fix. Separately: there is also a stale dependency. Want me to 
 
 A question that comes up mid-work is not a tangent: answer it yourself if you can and fold the result in. If it still needs the reader, surface it once, at the end.
 
-### 5. Restate state every turn
+### 5. Restate the current state
 
-The reader cannot hold "we are on step 3 of 5" between messages. Restate it.
+The clarification must include the state needed to act without relying on earlier messages.
 
 Bad: "Done. Ready for the next part?"
 Good: "Step 3 of 5 done: schema updated. Next: backfill the new column. Run the script?"
