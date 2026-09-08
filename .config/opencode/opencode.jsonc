@@ -5,7 +5,8 @@
     "@dietrichgebert/ponytail"
   ],
   "instructions": [
-    "~/.config/opencode/instructions/workflow-composition.md"
+    "~/.config/opencode/instructions/workflow-composition.md",
+    "~/.config/opencode/instructions/soul.md"
   ],
   "mcp": {
     "sonarqube": {
