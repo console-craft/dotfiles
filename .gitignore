@@ -5,3 +5,6 @@
 /.config/opencode/node_modules/
 /.config/opencode/*.log
 /.config/opencode/*.tmp
+
+# OpenCode local service credentials
+/.config/opencode/service.json

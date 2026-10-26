@@ -192,3 +192,9 @@ if [[ -r "$private_shell_env" ]]; then
 fi
 
 unset private_shell_env
+
+# bun completions
+[ -s "/Users/ovi/.bun/_bun" ] && source "/Users/ovi/.bun/_bun"
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"

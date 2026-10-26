@@ -1,0 +1,42 @@
+{
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "theme": {
+    "name": "gruvware"
+  },
+  "keybinds": {
+    "leader": "ctrl+space",
+    "session.half.page.up": "ctrl+u",
+    "session.half.page.down": "ctrl+d"
+  },
+  "scroll": {
+    "speed": 3,
+    "acceleration": true
+  },
+  "diffs": {
+    "view": "auto",
+    "wrap": "word",
+    "single": true
+  },
+  "session": {
+    "sidebar": "hide",
+    "scrollbar": true,
+    "thinking": "show",
+    "verbosity": "high"
+  },
+  "animations": true,
+  "tabs": {
+    "layout": "horizontal",
+    "mode": "off"
+  },
+  "prompt": {
+    "image_preview": true,
+    "paste": "full"
+  },
+  "attention": {
+    "notifications": true,
+    "sound": true
+  },
+  "terminal": {
+    "copy": "select"
+  }
+}

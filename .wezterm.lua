@@ -7,6 +7,7 @@ if is_windows then
 	config.default_domain = "WSL:FedoraLinux-44"
 end
 
+--[[ Retained for reference; Herdr is no longer in use.
 local function is_herdr(pane)
 	local process = pane:get_foreground_process_name() or ""
 	local process_name = process:match("([^/\\]+)$") or process
@@ -26,6 +27,7 @@ local function send_herdr_key(sequence, key, mods)
 		end
 	end)
 end
+]]
 
 config.color_scheme = "Gruvbox dark, soft (base16)"
 config.font = wezterm.font("JetBrains Mono")
@@ -38,6 +40,7 @@ config.window_frame = {
 	font_size = is_windows and 9.0 or 12.0,
 }
 config.window_padding = { left = 5, right = 5, top = 5, bottom = 0 }
+config.enable_kitty_keyboard = true
 config.colors = {
 	cursor_bg = "#ffffff",
 	selection_bg = "#7daea3",
@@ -56,13 +59,15 @@ config.keys = {
 	{ mods = "CTRL|SHIFT", key = "c", action = act.CopyTo("ClipboardAndPrimarySelection") },
 	{ mods = "CTRL|SHIFT", key = "v", action = act.PasteFrom("Clipboard") },
 
-	-- Needed for sending this keybinds to Neovim, through Herdr
+	--[[ Needed for sending these keybinds to Neovim through Herdr.
 	{ mods = "CTRL", key = "[", action = send_herdr_key("\x1b[91;5u", "[", "CTRL") },
 	{ mods = "CTRL", key = "/", action = send_herdr_key("\x1b[47;5u", "/", "CTRL") },
 	{ mods = "CTRL", key = "Enter", action = send_herdr_key("\x1b[13;5u", "Enter", "CTRL") },
 	{ mods = "ALT", key = "[", action = send_herdr_key("\x1b[91;3u", "[", "ALT") },
+	]]
 }
 
+--[[ Retained for reference; Kitty keyboard negotiation now carries these modifiers directly.
 -- Herdr cannot distinguish these modifiers in legacy terminal input. Send explicit Kitty sequences while preserving normal key handling elsewhere.
 local herdr_mods = "CTRL|ALT|CMD"
 local herdr_keys = { "h", "j", "k", "l", "n", "c", "[", "]", "Enter" }
@@ -74,5 +79,6 @@ for _, key in ipairs(herdr_keys) do
 		action = send_herdr_key(string.format("\x1b[%d;15u", codepoint), key, herdr_mods),
 	})
 end
+]]
 
 return config

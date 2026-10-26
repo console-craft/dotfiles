@@ -1,21 +1,26 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "superpowers@git+https://github.com/obra/superpowers.git",
-    "@dietrichgebert/ponytail"
+  "plugins": [
+    "superpowers@git+https://github.com/obra/superpowers.git#bb92a77741419a4ab5f06e711a283343f1ada0c3",
+    "@dietrichgebert/ponytail@5.1.0"
   ],
   "instructions": [
     "~/.config/opencode/instructions/workflow-composition.md",
     "~/.config/opencode/instructions/soul.md"
   ],
   "mcp": {
-    "sonarqube": {
-      "type": "local",
-      "enabled": true,
-      "timeout": 60000,
-      "command": [
-        "sonarqube-mcp"
-      ]
+    "servers": {
+      "sonarqube": {
+        "type": "local",
+        "command": [
+          "sonarqube-mcp"
+        ],
+        "disabled": false,
+        "timeout": {
+          "catalog": 60000,
+          "execution": 60000
+        }
+      }
     }
   }
 }

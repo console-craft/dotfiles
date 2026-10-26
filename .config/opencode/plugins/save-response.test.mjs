@@ -4,10 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-let createPlugin;
+let createSaveTool;
+let readHistory;
 let importError;
 try {
-  ({ default: createPlugin } = await import("./save-response.js"));
+  ({ createSaveTool, readHistory } = await import("./save-response.js"));
 } catch (error) {
   importError = error;
 }
@@ -19,75 +20,27 @@ test.afterEach(async () => {
 });
 
 function user(id, text) {
-  return {
-    info: {
-      id,
-      sessionID: "session-1",
-      role: "user",
-      time: { created: 1 },
-      agent: "build",
-      model: { providerID: "openai", modelID: "test" },
-    },
-    parts: [{ id: `${id}-text`, sessionID: "session-1", messageID: id, type: "text", text }],
-  };
+  return { id, type: "user", text, time: { created: 1 } };
 }
 
 function assistant(id, parentID, text) {
-  const texts = Array.isArray(text) ? text : [text];
   return {
-    info: {
-      id,
-      sessionID: "session-1",
-      role: "assistant",
-      time: { created: 2, completed: 3 },
-      parentID,
-      modelID: "test",
-      providerID: "openai",
-      mode: "build",
-      path: { cwd: "/project", root: "/project" },
-      cost: 0,
-      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-      finish: "stop",
-    },
-    parts: text === undefined
-      ? []
-      : texts.map((value, index) => ({
-          id: `${id}-text-${index}`,
-          sessionID: "session-1",
-          messageID: id,
-          type: "text",
-          text: value,
-        })),
+    id, type: "assistant", time: { created: 2, completed: 3 },
+    content: text === undefined ? [] : (Array.isArray(text) ? text : [text])
+      .map((text) => ({ type: "text", text })),
   };
 }
 
 async function setup(messages) {
   assert.ifError(importError);
-  assert.equal(typeof createPlugin, "function", "save-response plugin should exist");
   const directory = await mkdtemp(join(tmpdir(), "save-response-test-"));
   directories.push(directory);
-  const client = {
-    session: {
-      messages: async ({ path, query }) => {
-        if (path.id !== "session-1" || query.directory !== directory) {
-          throw new Error("plugin requested the wrong session");
-        }
-        return { data: messages };
-      },
-    },
-  };
-  const hooks = await createPlugin({ client });
-  const context = {
-    sessionID: "session-1",
-    messageID: "a2",
-    agent: "build",
-    directory,
-    worktree: directory,
-    abort: new AbortController().signal,
-    metadata() {},
-    async ask() {},
-  };
-  return { directory, save: (args) => hooks.tool.save_response.execute(args, context) };
+  const tool = createSaveTool(async ({ sessionID }) => {
+    assert.equal(sessionID, "session-1");
+    return { info: { id: sessionID, location: { directory } }, messages, triggerID: "u2" };
+  });
+  const context = { sessionID: "session-1", messageID: "a2", signal: new AbortController().signal };
+  return { directory, save: (args) => tool.execute(args, context) };
 }
 
 const answer = "# Answer\n\n```js\nconsole.log(\"exact\");\n```";
@@ -175,4 +128,50 @@ test("response export fails without creating a file when no earlier response exi
 
   await assert.rejects(save({ scope: "response", format: "markdown" }), /No previous assistant response/);
   assert.deepEqual(await readdir(directory), []);
+});
+
+
+test("export excludes reasoning, tools, synthetic messages and save-turn preambles", async () => {
+  const prior = assistant("a1", "u1", "Visible answer");
+  prior.content.push({ type: "reasoning", text: "Private reasoning" }, { type: "tool", name: "read" });
+  const { directory, save } = await setup([
+    user("u1", "Question"), prior,
+    { id: "synthetic", type: "synthetic", text: "Hidden instructions" },
+    { id: "compact", type: "compaction", summary: "Summary must not replace history" },
+    user("u2", "/save conversation"), assistant("preamble", "u2", "I will save that"),
+    assistant("a2", "u2"),
+  ]);
+  await save({ scope: "conversation", format: "markdown" });
+  const [filename] = await readdir(directory);
+  assert.equal(await readFile(join(directory, filename), "utf8"),
+    "# Conversation\n\n> User:\n\nQuestion\n\n> Assistant:\n\nVisible answer\n");
+});
+
+test("missing save request fails without guessing or writing a file", async () => {
+  const { directory, save } = await setup([user("u1", "Question"), assistant("a1", "u1", "Answer")]);
+  await assert.rejects(save({ scope: "response", format: "markdown" }), /Could not locate the save request/);
+  assert.deepEqual(await readdir(directory), []);
+});
+
+
+test("history reads all pages through the active tool message in chronological order", async () => {
+  const calls = [];
+  const pages = {
+    start: { data: [user("u1", "Old question"), assistant("a1", "u1", "Old answer")], cursor: { next: "older" } },
+    older: { data: [{ id: "compact", type: "compaction" }, user("u2", "/save")], cursor: { next: "active" } },
+    active: { data: [assistant("a2", "u2")], cursor: { next: "unused" } },
+  };
+  const messages = await readHistory(async cursor => {
+    calls.push(cursor); return pages[cursor ?? "start"];
+  }, "a2");
+  assert.deepEqual(calls, [undefined, "older", "active"]);
+  assert.deepEqual(messages.map(x => x.id), ["u1", "a1", "compact", "u2", "a2"]);
+});
+
+
+test("export works while the executing assistant message is not durable yet", async () => {
+  const { directory, save } = await setup([user("u1", "Question"), assistant("a1", "u1", "Exact answer"), user("u2", "/save")]);
+  await save({ scope: "response", format: "markdown" });
+  const [filename] = await readdir(directory);
+  assert.equal(await readFile(join(directory, filename), "utf8"), "Exact answer");
 });
