@@ -1,0 +1,3 @@
+# Unified patches require a space prefix on blank context lines.
+references/*.patch text eol=lf whitespace=-blank-at-eol
+references/*.json text eol=lf

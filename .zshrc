@@ -198,3 +198,7 @@ unset private_shell_env
 
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# Vite+ bin (https://viteplus.dev)
+[[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/vite-plus/env" ]] &&
+  source "${XDG_CONFIG_HOME:-$HOME/.config}/vite-plus/env"
