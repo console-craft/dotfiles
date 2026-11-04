@@ -1,0 +1,281 @@
+diff --git a/apps/web/src/components/DiffWorkerPoolProvider.tsx b/apps/web/src/components/DiffWorkerPoolProvider.tsx
+index a40d8e20c7bacb8552658b5e1301f05a93452969..1311a61056a5468701c52ff51c183e77cc20f6c4 100644
+--- a/apps/web/src/components/DiffWorkerPoolProvider.tsx
++++ b/apps/web/src/components/DiffWorkerPoolProvider.tsx
+@@ -4,12 +4,12 @@ import DiffsWorker from "@pierre/diffs/worker/worker.js?worker";
+ import * as Schema from "effect/Schema";
+ import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+ import { getRenderedAppearance, subscribeRenderedAppearance } from "../hooks/useTheme";
+-import { resolveDiffThemeName } from "../lib/diffRendering";
++import { DIFF_THEME_NAMES, resolveDiffThemeName } from "../lib/diffRendering";
+ import { PREFERRED_HIGHLIGHTER } from "../lib/syntaxHighlighting";
+ 
+ export class DiffWorkerError extends Schema.TaggedError<DiffWorkerError>()("DiffWorkerError", {
+   operation: Schema.Literals(["create-worker", "get-render-options", "set-render-options"]),
+-  themeName: Schema.Literals(["pierre-dark", "t3-light"]),
++  themeName: Schema.Literals(Object.values(DIFF_THEME_NAMES)),
+   cause: Schema.Defect(),
+ }) {
+   override get message(): string {
+diff --git a/apps/web/src/components/composerCodeBlockHighlight.test.ts b/apps/web/src/components/composerCodeBlockHighlight.test.ts
+index de3236be7ae23f55c485842411fa466cb9070563..07960e8c1ea8a21aeb0166449f933e2a8a5ad0c6 100644
+--- a/apps/web/src/components/composerCodeBlockHighlight.test.ts
++++ b/apps/web/src/components/composerCodeBlockHighlight.test.ts
+@@ -5,14 +5,14 @@ import StarterKit from "@tiptap/starter-kit";
+ import { afterEach, describe, expect, it, onTestFinished, vi } from "vite-plus/test";
+ 
+ import { ComposerCodeBlockExtension } from "~/composer-rich-text-doc";
+-import type { DiffThemeName } from "~/lib/diffRendering";
++import { DIFF_THEME_NAMES } from "~/lib/diffRendering";
+ import { getSyntaxHighlighterPromise } from "~/lib/syntaxHighlighting";
+ 
+ import { composerCodeBlockHighlight, tokenizeBlock } from "./composerCodeBlockHighlight";
+ 
+ vi.mock("~/lib/syntaxHighlighting", () => ({ getSyntaxHighlighterPromise: vi.fn() }));
+ 
+-const THEME = "pierre-dark" as DiffThemeName;
++const THEME = DIFF_THEME_NAMES.dark;
+ 
+ function fakeHighlighter(colorFor: (content: string) => string | undefined) {
+   return {
+diff --git a/apps/web/src/lib/diffRendering.ts b/apps/web/src/lib/diffRendering.ts
+index 2add48cad5724247acb74cf47b18669402ebe535..f9f59cf113513962d9218a3b92a198d2374c3fe1 100644
+--- a/apps/web/src/lib/diffRendering.ts
++++ b/apps/web/src/lib/diffRendering.ts
+@@ -1,13 +1,9 @@
+ import { parsePatchFiles } from "@pierre/diffs/utils/parsePatchFiles";
+ import { parseDiffFromFile } from "@pierre/diffs";
+ import type { FileDiffMetadata } from "@pierre/diffs/types";
+-import { READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
++import { GRUVWARE_THEME_NAMES } from "./gruvwareSyntaxTheme";
+ 
+-// Light mode uses a darker pierre-light so syntax stays readable on every code surface.
+-export const DIFF_THEME_NAMES = {
+-  light: READABLE_LIGHT_THEME_NAME,
+-  dark: "pierre-dark",
+-} as const;
++export const DIFF_THEME_NAMES = GRUVWARE_THEME_NAMES;
+ 
+ export type DiffThemeName = (typeof DIFF_THEME_NAMES)[keyof typeof DIFF_THEME_NAMES];
+ 
+diff --git a/apps/web/src/lib/gruvwareSyntaxTheme.ts b/apps/web/src/lib/gruvwareSyntaxTheme.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64b73b423c
+--- /dev/null
++++ b/apps/web/src/lib/gruvwareSyntaxTheme.ts
+@@ -0,0 +1,112 @@
++import { getResolvedOrResolveTheme, registerCustomTheme } from "@pierre/diffs";
++
++export const GRUVWARE_THEME_NAMES = {
++  light: "gruvware-light",
++  dark: "gruvware-dark",
++} as const;
++
++// Resolved from dotfiles/.config/opencode/themes/gruvware.json; keep builds independent of dotfiles.
++const palettes = {
++  light: {
++    comment: "#7c6f64",
++    keyword: "#9d0006",
++    function: "#79740e",
++    variable: "#076678",
++    string: "#b57614",
++    number: "#8f3f71",
++    type: "#427b58",
++    operator: "#af3a03",
++    punctuation: "#3c3836",
++  },
++  dark: {
++    comment: "#695e55",
++    keyword: "#d4be98",
++    function: "#d4be98",
++    variable: "#b2ba8e",
++    string: "#bac584",
++    number: "#d6b37b",
++    type: "#e6d5ae",
++    operator: "#d4be98",
++    punctuation: "#eead83",
++  },
++} as const;
++
++const scopeRoles: Record<string, keyof typeof palettes.light> = {
++  comment: "comment",
++  hint: "comment",
++  predictive: "comment",
++  keyword: "keyword",
++  at_keyword: "keyword",
++  preproc: "keyword",
++  function: "function",
++  method_definition: "function",
++  variable: "variable",
++  property: "variable",
++  property_name: "variable",
++  property_identifier: "variable",
++  shorthand_property_identifier: "variable",
++  shorthand_property_identifier_pattern: "variable",
++  this: "variable",
++  self: "variable",
++  label: "variable",
++  string: "string",
++  template_string: "string",
++  text: "string",
++  number: "number",
++  boolean: "number",
++  constant: "number",
++  value: "number",
++  plain_value: "number",
++  unit: "number",
++  color: "number",
++  variant: "number",
++  type: "type",
++  constructor: "type" as const,
++  class: "type",
++  class_name: "type",
++  enum: "type",
++  namespace: "type",
++  tag: "type",
++  tag_name: "type",
++  attribute: "type",
++  decorator: "type",
++  selector: "type",
++  pseudo_class_selector: "type",
++  pseudo_element_selector: "type",
++  id_name: "variable",
++  operator: "operator",
++  "keyword.operator": "operator",
++  punctuation: "punctuation",
++};
++
++for (const appearance of ["light", "dark"] as const) {
++  const name = GRUVWARE_THEME_NAMES[appearance];
++  registerCustomTheme(
++    name,
++    async () => {
++      const base = await getResolvedOrResolveTheme(`pierre-${appearance}`, "highlights");
++      if (!base.zed) throw new Error(`pierre-${appearance} has no Highlights palette`);
++      const palette = palettes[appearance];
++      const foreground = appearance === "light" ? "#3c3836" : "#d4be98";
++      const syntax = Object.fromEntries(
++        Object.entries(base.zed.style.syntax ?? {}).map(([scope, style]) => {
++          if (scope.startsWith("diff.")) return [scope, style];
++          const role = scopeRoles[scope] ?? scopeRoles[scope.split(".")[0]!];
++          return [
++            scope,
++            {
++              ...(typeof style === "string" ? {} : style),
++              color: role ? palette[role] : foreground,
++            },
++          ];
++        }),
++      );
++      return {
++        ...base.zed,
++        name,
++        style: { ...base.zed.style, text: foreground, "editor.foreground": foreground, syntax },
++      };
++    },
++    "zed",
++  );
++}
+diff --git a/apps/web/src/lib/readableSyntaxTheme.ts b/apps/web/src/lib/readableSyntaxTheme.ts
+index 7f4c9e5056a92f53c111a72568e6eb41e8170280..f8b5ea280a2fdcfa7c50ed57fb47529aebb5d9a5 100644
+--- a/apps/web/src/lib/readableSyntaxTheme.ts
++++ b/apps/web/src/lib/readableSyntaxTheme.ts
+@@ -1,7 +1,7 @@
+ import { getResolvedOrResolveTheme, registerCustomTheme, type DiffsTheme } from "@pierre/diffs";
+ 
+ /** pierre-light with every syntax color darkened until it reads on every light code surface. */
+-export const READABLE_LIGHT_THEME_NAME = "t3-light";
++const READABLE_LIGHT_THEME_NAME = "t3-light";
+ 
+ const MIN_CONTRAST = 4.5;
+ // The darkest light code surface is a changed word on a deleted line (#f8d3d4, luminance
+diff --git a/apps/web/src/lib/syntaxHighlighting.test.ts b/apps/web/src/lib/syntaxHighlighting.test.ts
+index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4db99a1208 100644
+--- a/apps/web/src/lib/syntaxHighlighting.test.ts
++++ b/apps/web/src/lib/syntaxHighlighting.test.ts
+@@ -4,6 +4,62 @@ import { describe, expect, it } from "vite-plus/test";
+ import { getSyntaxHighlighterPromise } from "./syntaxHighlighting";
+ import { DIFF_THEME_NAMES } from "./diffRendering";
+ 
++it.each([
++  {
++    appearance: "light" as const,
++    colors: [
++      "#7c6f64",
++      "#9d0006",
++      "#79740e",
++      "#076678",
++      "#b57614",
++      "#8f3f71",
++      "#427b58",
++      "#af3a03",
++      "#3c3836",
++    ],
++  },
++  {
++    appearance: "dark" as const,
++    colors: [
++      "#695e55",
++      "#d4be98",
++      "#d4be98",
++      "#b2ba8e",
++      "#bac584",
++      "#d6b37b",
++      "#e6d5ae",
++      "#d4be98",
++      "#eead83",
++    ],
++  },
++])("renders Gruvware syntax colors in $appearance mode", async ({ appearance, colors }) => {
++  const highlighter = await getSyntaxHighlighterPromise("typescript");
++  const code =
++    '// greeting\nfunction greet(name: string) { const count = 42; return "hello" + name; }';
++  const { tokens } = highlighter.codeToTokens(code, {
++    lang: "typescript",
++    theme: DIFF_THEME_NAMES[appearance],
++  });
++  expect(tokens.map((line) => line.map((token) => token.content).join("")).join("\n")).toBe(code);
++  for (const [index, text] of [
++    "greeting",
++    "function",
++    "greet",
++    "name",
++    "hello",
++    "42",
++    "string",
++    "+",
++    "{",
++  ].entries()) {
++    expect(
++      tokens.flat().filter((token) => token.content.includes(text)),
++      text,
++    ).toEqual(expect.arrayContaining([expect.objectContaining({ color: colors[index] })]));
++  }
++});
++
+ describe("dialect file types", () => {
+   it.each([
+     ["src/init.luau", "lua"],
+@@ -14,6 +70,22 @@ describe("dialect file types", () => {
+   });
+ });
+ 
++it.each(["light", "dark"] as const)(
++  "keeps raw diff additions and removals distinct in %s mode",
++  async (appearance) => {
++    const highlighter = await getSyntaxHighlighterPromise("diff");
++    const { tokens } = highlighter.codeToTokens("-old\n+new", {
++      lang: "diff",
++      theme: DIFF_THEME_NAMES[appearance],
++    });
++    const removed = tokens[0]!.find((token) => token.content.includes("old"))?.color;
++    const added = tokens[1]!.find((token) => token.content.includes("new"))?.color;
++    expect(removed).toBeDefined();
++    expect(added).toBeDefined();
++    expect(removed).not.toBe(added);
++  },
++);
++
+ it.each([
+   "asm",
+   "assembly",

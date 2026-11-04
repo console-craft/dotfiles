@@ -1,0 +1,102 @@
+diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-artifact.test.ts
+index 165ca80cb30a33351cdaddec7129b881a92ecb49..85ddd61eeedb707224e1f179e4e9f0b17d7bba41 100644
+--- a/scripts/build-desktop-artifact.test.ts
++++ b/scripts/build-desktop-artifact.test.ts
+@@ -216,6 +216,7 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
+ 
+ const makeMacPayloadFixture = Effect.fn("test.makeMacPayloadFixture")(function* (input: {
+   readonly serverEntrySource?: string;
++  readonly omitDesktopEntry?: string;
+ }) {
+   const fs = yield* FileSystem.FileSystem;
+   const path = yield* Path.Path;
+@@ -224,6 +225,13 @@ const makeMacPayloadFixture = Effect.fn("test.makeMacPayloadFixture")(function*
+   const serverEntryPath = path.join(sourceDir, "apps/server/dist/bin.mjs");
+   yield* fs.makeDirectory(path.dirname(serverEntryPath), { recursive: true });
+   yield* fs.writeFileString(serverEntryPath, input.serverEntrySource ?? "console.log('server');\n");
++  const desktopDir = path.join(sourceDir, "apps/desktop/dist-electron");
++  yield* fs.makeDirectory(desktopDir, { recursive: true });
++  for (const entry of ["boot.cjs", "compileCache.cjs", "main.cjs", "preload.cjs"]) {
++    if (entry !== input.omitDesktopEntry) {
++      yield* fs.writeFileString(path.join(desktopDir, entry), "module.exports = {};\n");
++    }
++  }
+ 
+   const stageDistDir = path.join(tempDir, "dist");
+   const resourcesDir = path.join(stageDistDir, "mac-arm64/T3 Code.app/Contents/Resources");
+@@ -546,6 +554,22 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+     ),
+   );
+ 
++  it.effect("ad-hoc signs local macOS builds without enabling hardened runtime", () =>
++    Effect.gen(function* () {
++      const config = yield* createBuildConfig(
++        "mac",
++        "dmg",
++        "0.1.6",
++        false,
++        false,
++        undefined,
++        undefined,
++      );
++      assert.propertyVal(config.mac, "identity", "-");
++      assert.propertyVal(config.mac, "hardenedRuntime", false);
++    }),
++  );
++
+   // pnpm writes "set this to true or false" placeholders into allowBuilds when a
+   // tarball changes. pnpm ignores them, but the release build decode rejects them.
+   it.effect("decodes the repo allowBuilds and every file: tarball it names exists", () =>
+@@ -1331,6 +1355,22 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+     ),
+   );
+ 
++  it.effect.each(["boot.cjs", "compileCache.cjs", "main.cjs", "preload.cjs"])(
++    "rejects a macOS app missing its desktop %s entry",
++    (entry) =>
++      Effect.scoped(
++        Effect.gen(function* () {
++          const fixture = yield* makeMacPayloadFixture({ omitDesktopEntry: entry });
++          const error = yield* validateMacPackagedPayload({
++            stageDistDir: fixture.stageDistDir,
++          }).pipe(Effect.flip);
++
++          assert.instanceOf(error, BundleNotSelfContainedError);
++          assert.include(error.output, `apps/desktop/dist-electron/${entry}`);
++        }),
++      ),
++  );
++
+   it.effect("rejects a macOS stage without a packaged app", () =>
+     Effect.scoped(
+       Effect.gen(function* () {
+diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.ts
+index 8ba7f1adcbbd296f62fce8659493e493f8ae6c13..db180fd33771c13a46f4148a7ba6323e26014c04 100644
+--- a/scripts/build-desktop-artifact.ts
++++ b/scripts/build-desktop-artifact.ts
+@@ -2820,6 +2820,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+     const repoRoot = yield* RepoRoot;
+     buildConfig.mac = {
+       target: target === "dmg" ? [target, "zip"] : [target],
++      ...(!signed ? { identity: "-", hardenedRuntime: false } : {}),
+       icon: "icon.icns",
+       category: "public.app-category.developer-tools",
+       extendInfo: {
+@@ -3549,6 +3550,17 @@ export const validateMacPackagedPayload = Effect.fn("desktopArtifact.validateMac
+       return yield* new MacPackagedAppMissingError({ stageDistDir: input.stageDistDir });
+     }
+     for (const asarPath of asarPaths) {
++      for (const entry of ["boot.cjs", "compileCache.cjs", "main.cjs", "preload.cjs"]) {
++        const entryPath = `apps/desktop/dist-electron/${entry}`;
++        yield* Effect.try({
++          try: () => statFile(asarPath, entryPath),
++          catch: (cause) =>
++            new BundleNotSelfContainedError({
++              exitCode: -1,
++              output: `Missing desktop entry ${entryPath} in ${asarPath}: ${String(cause)}`,
++            }),
++        });
++      }
+       yield* verifyPackagedBundleIsSelfContained({ asarPath, verbose: input.verbose ?? false });
+     }
+     yield* Effect.log(

@@ -1,0 +1,374 @@
+diff --git a/apps/web/src/components/ProjectMonogram.tsx b/apps/web/src/components/ProjectMonogram.tsx
+index 3d7e5520ac8c40ae6ace960197fe076772f63723..6cc25d012a9bc41a73ad94602a3d08b8e02ba129 100644
+--- a/apps/web/src/components/ProjectMonogram.tsx
++++ b/apps/web/src/components/ProjectMonogram.tsx
+@@ -20,6 +20,7 @@ export function ProjectMonogram({
+       className={cn("inline-flex size-4 shrink-0 items-center justify-center", className)}
+     >
+       <svg
++        data-project-monogram={color}
+         viewBox="0 0 16 16"
+         className={cn(
+           "size-full overflow-hidden rounded-[25%] font-mono select-none",
+diff --git a/apps/web/src/components/chat/SideChatPane.tsx b/apps/web/src/components/chat/SideChatPane.tsx
+index 1a5bd1141b31f0cf34414e164de1de43d5e06053..77697616d7585418389b3648e6b9dffc24688221 100644
+--- a/apps/web/src/components/chat/SideChatPane.tsx
++++ b/apps/web/src/components/chat/SideChatPane.tsx
+@@ -125,7 +125,7 @@ export default function SideChatPane(props: {
+   return (
+     <div data-side-chat-pane className="flex h-full min-h-0 flex-col">
+       <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border pr-1 pl-3">
+-        <span className="min-w-0 flex-1 truncate text-xs font-medium">
++        <span className="min-w-0 flex-1 truncate text-xs font-medium dark:text-gruvware-foreground">
+           {shell?.title ?? "Side chat"}
+         </span>
+         <Tooltip>
+diff --git a/apps/web/src/components/diffs/StyledDiffCodeView.tsx b/apps/web/src/components/diffs/StyledDiffCodeView.tsx
+index 99049e280cb5aecf9ee0b0262a9773128de6a91f..5c8f0d67548bbee013a3ab604fc9ae077438e4d3 100644
+--- a/apps/web/src/components/diffs/StyledDiffCodeView.tsx
++++ b/apps/web/src/components/diffs/StyledDiffCodeView.tsx
+@@ -20,6 +20,18 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+   --diffs-code-grid: var(--diffs-grid-number-column-width) minmax(0, 1fr);
+ }
+ 
++/* Set the composed color so Pierre does not blend away the requested dark shade. */
++[data-background] [data-line-type="change-addition"] {
++  --diffs-computed-diff-line-bg: light-dark(
++    color-mix(
++      in lab,
++      var(--diffs-computed-decoration-bg) var(--mix-light),
++      var(--diffs-diff-line-mix-target)
++    ),
++    #35381f
++  ) !important;
++}
++
+ :is(
+   [data-line],
+   [data-line-annotation],
+@@ -148,6 +160,7 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+    descenders; give the clipped names room inside the fixed-height header. */
+ [data-diffs-header] :is([data-title], [data-prev-name]) {
+   line-height: 16px !important;
++  color: light-dark(var(--code-foreground), #e6d5ae) !important;
+ }
+ 
+ [data-diffs-header] [data-metadata] {
+@@ -177,7 +190,10 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+ }
+ 
+ [data-title]:hover {
+-  color: color-mix(in srgb, var(--code-foreground) 84%, var(--primary)) !important;
++  color: light-dark(
++    color-mix(in srgb, var(--code-foreground) 84%, var(--primary)),
++    #e6d5ae
++  ) !important;
+ }
+ 
+ /* Expanding a file mounts its body all at once; easing it in matches the 200ms the app's
+diff --git a/apps/web/src/components/files/FileMarkdownPreview.tsx b/apps/web/src/components/files/FileMarkdownPreview.tsx
+index 19df3f6687058ad88e5b1cfeabc626546503887b..75392088c97d11c5ea0af008f4063cabdf96113b 100644
+--- a/apps/web/src/components/files/FileMarkdownPreview.tsx
++++ b/apps/web/src/components/files/FileMarkdownPreview.tsx
+@@ -30,7 +30,7 @@ export function FileMarkdownPreview(props: {
+       imageBaseDir={imageBaseDir}
+       threadRef={props.threadRef}
+       workspaceMutationId={props.workspaceMutationId}
+-      className="mx-auto max-w-4xl px-6 py-5"
++      className="file-markdown-preview mx-auto max-w-4xl px-6 py-5"
+       onTaskListChange={props.onTaskListChange}
+     />
+   );
+diff --git a/apps/web/src/components/files/fileSurfaceChrome.tsx b/apps/web/src/components/files/fileSurfaceChrome.tsx
+index df0de1ed81d1efb875bb2be310930a52719718fd..0671f08d8a9b3f3ba9575a80d61bab80ddaafffc 100644
+--- a/apps/web/src/components/files/fileSurfaceChrome.tsx
++++ b/apps/web/src/components/files/fileSurfaceChrome.tsx
+@@ -56,6 +56,17 @@ export const FILE_LINK_REVEAL_UNSAFE_CSS = `
+     ) !important;
+     color: var(--diffs-selection-number-fg) !important;
+   }
++
++  :is([data-line], [data-column-number], [data-gutter-buffer="buffer"]):is(
++    [data-selected-line],
++    [data-editor-active-line]
++  ) {
++    --diffs-line-bg: light-dark(var(--diffs-computed-hovered-line-bg), #4c4641) !important;
++  }
++
++  [data-line-annotation], [data-gutter-buffer="annotation"] {
++    --diffs-line-bg: light-dark(var(--diffs-computed-hovered-line-bg), #4c4641) !important;
++  }
+ `;
+ 
+ export function FileSurfaceAction(props: {
+diff --git a/apps/web/src/components/pullRequest/PullRequestListRow.tsx b/apps/web/src/components/pullRequest/PullRequestListRow.tsx
+index feec84fac0110a03d62b730a59466fba06bb13ce..469d5e7fb3340f2bb1a535690236835a54b30d73 100644
+--- a/apps/web/src/components/pullRequest/PullRequestListRow.tsx
++++ b/apps/web/src/components/pullRequest/PullRequestListRow.tsx
+@@ -78,7 +78,7 @@ export function PullRequestRowLines({
+     <span className="min-w-0 flex-1">
+       <span className="flex min-w-0 items-center gap-1.5">
+         {number}
+-        <span className="min-w-0 truncate text-sm">{title}</span>
++        <span className="min-w-0 truncate text-sm dark:text-gruvware-foreground">{title}</span>
+         {signals ? (
+           <span className="flex shrink-0 items-center gap-1 text-2xs">{signals}</span>
+         ) : null}
+diff --git a/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx b/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
+index a73c3f21f0b390c1114c7e38c59c7f654e944f16..3be8cd6e4211030490e7f2b6f36f25f44c6ac61c 100644
+--- a/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
++++ b/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
+@@ -78,7 +78,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
+         className="flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-(--control-radius) px-(--sidebar-row-content-inset) text-left outline-none hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+       >
+         <ProjectFavicon project={group} className="size-4 shrink-0" />
+-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90">
++        <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground/90 dark:text-gruvware-foreground">
+           {group.displayName}
+         </span>
+         {dot ? (
+diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+index bc89186d93737ca48b64836c2094a5a686bf6452..0efaf2aa6fd3d665954282659b1824f8597f954c 100644
+--- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
++++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
+@@ -725,7 +725,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+       ? {
+           label: thread.goal?.status === "active" ? "Goal" : "Working",
+           icon: "working" as const,
+-          className: "text-info-foreground",
++          className: "text-info-foreground dark:text-gruvware-orange",
+         }
+       : status === "waiting"
+         ? {
+@@ -773,7 +773,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                       ? {
+                           label: "Done",
+                           icon: "done" as const,
+-                          className: "text-success-foreground",
++                          className: "text-success-foreground dark:text-[#bac584]",
+                         }
+                       : null;
+   const isWokeStatus = topStatus?.icon === "woke";
+diff --git a/apps/web/src/index.css b/apps/web/src/index.css
+index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e211f6d9b 100644
+--- a/apps/web/src/index.css
++++ b/apps/web/src/index.css
+@@ -272,6 +272,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+   --color-card: var(--card);
+   --color-code: var(--code-background);
+   --color-foreground: var(--contrast-foreground);
++  --color-gruvware-foreground: #e6d5ae;
++  --color-gruvware-orange: #eead83;
+   --color-background: var(--background);
+   --color-message: var(--message-surface);
+   --color-message-foreground: var(--contrast-message-foreground);
+@@ -1191,18 +1193,18 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+        states provide separation without milky gray fills. */
+     --background: #000;
+     --surface-raised: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+-    --foreground: var(--color-neutral-100);
++    --foreground: #e6d5ae;
+     --card: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+-    --card-foreground: var(--color-neutral-100);
++    --card-foreground: var(--foreground);
+     --popover: color-mix(in srgb, var(--color-neutral-950) 97%, var(--color-white));
+-    --popover-foreground: var(--color-neutral-100);
++    --popover-foreground: var(--foreground);
+     --primary: oklch(0.571 0.21 264);
+     --secondary: --alpha(var(--color-white) / 3%);
+-    --secondary-foreground: var(--color-neutral-100);
++    --secondary-foreground: var(--foreground);
+     --muted: --alpha(var(--color-white) / 3%);
+     --muted-foreground: var(--color-neutral-400);
+     --accent: --alpha(var(--color-white) / 4%);
+-    --accent-foreground: var(--color-neutral-100);
++    --accent-foreground: var(--foreground);
+     /* A user turn sits above the composer tone, level with the selected sidebar row. */
+     --message-surface: color-mix(in srgb, var(--color-neutral-950) 92%, var(--color-white));
+     --error: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+@@ -1254,11 +1256,11 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+ 
+   @variant dark {
+     --background: #000;
+-    --foreground: #f1f3f7;
++    --foreground: #e6d5ae;
+     --card: #000;
+     --card-foreground: var(--foreground);
+     --accent: #191a1d;
+-    --accent-foreground: #f7f9ff;
++    --accent-foreground: var(--foreground);
+     --muted: #0a0a0a;
+     --muted-foreground: #a3a3a3;
+     --border: rgb(255 255 255 / 8%);
+@@ -1277,15 +1279,70 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
+   }
+ }
+ 
+-/* Modified files get a muted blue so added and deleted files lead. Built from the info token,
+-   which themes do not override, so it stays blue in every theme. */
++[data-project-monogram] {
++  @variant dark {
++    &[data-project-monogram="gray"] {
++      color: #bdae93;
++    }
++    &:is(
++      [data-project-monogram="red"],
++      [data-project-monogram="pink"],
++      [data-project-monogram="rose"]
++    ) {
++      color: #de9880;
++    }
++    &[data-project-monogram="orange"] {
++      color: #eead83;
++    }
++    &[data-project-monogram="amber"] {
++      color: #ca9a70;
++    }
++    &[data-project-monogram="yellow"] {
++      color: #d6b37b;
++    }
++    &:is([data-project-monogram="lime"], [data-project-monogram="green"]) {
++      color: #bac584;
++    }
++    &:is(
++      [data-project-monogram="emerald"],
++      [data-project-monogram="teal"],
++      [data-project-monogram="cyan"]
++    ) {
++      color: #b2ba8e;
++    }
++    &:is(
++      [data-project-monogram="sky"],
++      [data-project-monogram="blue"],
++      [data-project-monogram="indigo"]
++    ) {
++      color: #adb79d;
++    }
++    &:is(
++      [data-project-monogram="violet"],
++      [data-project-monogram="purple"],
++      [data-project-monogram="fuchsia"]
++    ) {
++      color: #d4a599;
++    }
++  }
++}
++
++/* Status overrides inherit into the file-tree and diff shadow roots. */
+ :root {
+   --diff-modified-icon: color-mix(in srgb, var(--info-foreground) 50%, var(--muted-foreground));
+ 
+   @variant dark {
+-    /* On black a gray mix stays as bright as the blue, so dim with transparency instead. */
+-    --diff-modified-icon: color-mix(in srgb, var(--info-foreground) 65%, transparent);
+-    --diff-added-icon: var(--success-foreground);
++    --diff-modified-icon: #7daea3;
++    --diff-added-icon: var(--diff-addition-foreground);
++    --trees-status-modified-override: #7daea3;
++    --trees-selected-fg-override: var(--contrast-foreground);
++    --trees-bg-muted-override: #2a2928;
++    --trees-status-added-override: var(--diff-addition-foreground);
++    --trees-status-untracked-override: var(--diff-addition-foreground);
++    --trees-status-deleted-override: var(--diff-deletion-foreground);
++    --diffs-addition-color-override: var(--diff-addition-foreground);
++    --diffs-deletion-color-override: var(--diff-deletion-foreground);
++    --diffs-modified-color-override: #7daea3;
+   }
+ }
+ 
+@@ -1489,6 +1546,11 @@ html[data-theme-id] [data-workspace-titlebar-controls] [data-slot="toggle"],
+ html[data-theme-id] [data-workspace-titlebar-controls] [data-slot="tooltip-trigger"] {
+   --control-icon-color: var(--contrast-toolbar-foreground);
+   color: var(--contrast-toolbar-foreground);
++
++  @variant dark {
++    --control-icon-color: #e6d5ae;
++    color: #e6d5ae;
++  }
+ }
+ 
+ html[data-theme-id] [data-panel-layout-controls] [data-slot="toggle"]:disabled,
+@@ -1708,6 +1770,10 @@ html[data-theme-id="t3-chat"] [data-app-sidebar] {
+     color-mix(in srgb, var(--sidebar-border) var(--appearance-contrast-base), transparent),
+     var(--sidebar-foreground) var(--appearance-contrast-border-boost)
+   );
++
++  @variant dark {
++    --contrast-accent-foreground: var(--contrast-foreground);
++  }
+ }
+ 
+ body {
+@@ -2135,6 +2201,40 @@ code {
+   font-size: 0.85em;
+ }
+ 
++[data-timeline-root] .chat-markdown,
++.file-markdown-preview.chat-markdown {
++  @variant dark {
++    & a {
++      --context-chip-ink: #7daea3;
++      color: #7daea3;
++    }
++
++    & :not(pre) > code {
++      color: #bac584;
++    }
++
++    & :is(ul, ol) > li::marker {
++      color: #eead83;
++    }
++
++    & h1 {
++      color: #d4a599;
++    }
++
++    & h2 {
++      color: #eead83;
++    }
++
++    & h3 {
++      color: #de9880;
++    }
++
++    & :is(h4, h5, h6) {
++      color: #d6b37b;
++    }
++  }
++}
++
+ .chat-markdown strong {
+   font-weight: 600;
+ }
+@@ -2274,6 +2374,11 @@ code {
+   --diff-deletion: var(--destructive);
+   --diff-addition-foreground: light-dark(var(--color-emerald-700), var(--color-emerald-400));
+   --diff-deletion-foreground: light-dark(var(--color-red-700), var(--color-red-400));
++
++  @variant dark {
++    --diff-addition-foreground: #bac584;
++    --diff-deletion-foreground: #de9880;
++  }
+ }
+ 
+ /* Chat width setting. Comfortable keeps the default --chat-content-max-width,
+diff --git a/apps/web/src/themePalette.ts b/apps/web/src/themePalette.ts
+index e7d9c5d5bf2fa298284780ae5fe688ec8f968845..4203a9c20aed575533cc259f576f9a290049fc38 100644
+--- a/apps/web/src/themePalette.ts
++++ b/apps/web/src/themePalette.ts
+@@ -399,6 +399,15 @@ export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors
+     return (standardDarkThemeColors ??= decodeThemeColors({
+       ...T3_CODE_DARK_THEME_COLORS,
+       canvas: "#000000",
++      toolbarForeground: "#e6d5ae",
++      toolbarControlForeground: "#e6d5ae",
++      text: "#e6d5ae",
++      secondaryForeground: "#e6d5ae",
++      accentSurfaceForeground: "#e6d5ae",
++      messageForeground: "#e6d5ae",
++      codeForeground: "#e6d5ae",
++      sidebarForeground: "#e6d5ae",
++      terminalForeground: "#e6d5ae",
+     }));
+   }
+   return (standardLightThemeColors ??= decodeThemeColors(T3_CODE_LIGHT_THEME_COLORS));
