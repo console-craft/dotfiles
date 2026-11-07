@@ -1,0 +1,63 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "cli_default_open_behavior": "existing_window",
+  "buffer_font_family": "JetBrainsMono Nerd Font Mono",
+  "buffer_line_height": "standard",
+  "buffer_font_weight": 100.0,
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
+  "agent": {
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "left"
+  },
+  "diff_view_style": "split",
+  "sticky_scroll": {
+    "enabled": true
+  },
+  "cursor_animation": {
+    "enabled": true
+  },
+  "markdown_preview": {
+    "open_markdown_files_in_preview": true,
+    "limit_content_width": false
+  },
+  "agent_servers": {
+    "opencode-v2": {
+      "type": "registry"
+    },
+    "codex-acp": {
+      "default_config_options": {
+        "fast-mode": true,
+        "reasoning_effort": "high",
+        "model": "gpt-6.1-sol"
+      },
+      "type": "registry"
+    }
+  },
+  "vim_mode": true,
+  "ui_font_size": 16,
+  "buffer_font_size": 11.0,
+  "theme": {
+    "mode": "system",
+    "light": "Gruvbox Light",
+    "dark": "Gruvcraft Dark Soft",
+  },
+}
