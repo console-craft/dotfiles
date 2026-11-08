@@ -8,3 +8,7 @@
 
 # OpenCode local service credentials
 /.config/opencode/service.json
+
+# Local planning notes and visual-changes development checks
+/docs/
+/skills/visual-changes/tests/
