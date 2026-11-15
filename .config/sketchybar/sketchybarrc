@@ -25,14 +25,15 @@ sketchybar --add item clock right \
            --subscribe battery system_woke power_source_change \
            --add item battery right \
            --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
-           --add alias "Control Center,Disk_mini" right \
-           --set "Control Center,Disk_mini" icon=  alias.color=0xffd4be98 alias.scale=0.95 \
-           --add alias "Control Center,GPU_mini" right \
-           --set "Control Center,GPU_mini" icon= alias.color=0xffd4be98 alias.scale=0.95 \
-           --add alias "Control Center,RAM_mini" right \
-           --set "Control Center,RAM_mini" icon= alias.color=0xffd4be98 alias.scale=0.95 \
-           --add alias "Control Center,CPU_mini" right \
-           --set "Control Center,CPU_mini" icon=  alias.color=0xffd4be98 alias.scale=0.95
+           --add item disk right \
+           --set disk update_freq=60 icon= script="$PLUGIN_DIR/disk.sh" \
+           --add item memory right \
+           --set memory update_freq=5 icon= script="$PLUGIN_DIR/memory.sh" \
+           --add item cpu right \
+           --set cpu update_freq=5 icon= script="$PLUGIN_DIR/cpu.sh" \
+           --subscribe disk system_woke \
+           --subscribe memory system_woke \
+           --subscribe cpu system_woke
 
 sketchybar --update
 
