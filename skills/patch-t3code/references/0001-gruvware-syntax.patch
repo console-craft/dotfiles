@@ -39,7 +39,7 @@ index de3236be7ae23f55c485842411fa466cb9070563..07960e8c1ea8a21aeb0166449f933e2a
  function fakeHighlighter(colorFor: (content: string) => string | undefined) {
    return {
 diff --git a/apps/web/src/lib/diffRendering.ts b/apps/web/src/lib/diffRendering.ts
-index 2add48cad5724247acb74cf47b18669402ebe535..f9f59cf113513962d9218a3b92a198d2374c3fe1 100644
+index 09b4d792b0e52a7dcbc271d38c6ba957c17584d3..fac0ea3d7d8fd3a51c7709f8790ec691f6bb789d 100644
 --- a/apps/web/src/lib/diffRendering.ts
 +++ b/apps/web/src/lib/diffRendering.ts
 @@ -1,13 +1,9 @@
@@ -58,6 +58,109 @@ index 2add48cad5724247acb74cf47b18669402ebe535..f9f59cf113513962d9218a3b92a198d2
  
  export type DiffThemeName = (typeof DIFF_THEME_NAMES)[keyof typeof DIFF_THEME_NAMES];
  
+diff --git a/apps/web/src/lib/readableSyntaxTheme.ts b/apps/web/src/lib/readableSyntaxTheme.ts
+index 7f4c9e5056a92f53c111a72568e6eb41e8170280..f8b5ea280a2fdcfa7c50ed57fb47529aebb5d9a5 100644
+--- a/apps/web/src/lib/readableSyntaxTheme.ts
++++ b/apps/web/src/lib/readableSyntaxTheme.ts
+@@ -1,7 +1,7 @@
+ import { getResolvedOrResolveTheme, registerCustomTheme, type DiffsTheme } from "@pierre/diffs";
+ 
+ /** pierre-light with every syntax color darkened until it reads on every light code surface. */
+-export const READABLE_LIGHT_THEME_NAME = "t3-light";
++const READABLE_LIGHT_THEME_NAME = "t3-light";
+ 
+ const MIN_CONTRAST = 4.5;
+ // The darkest light code surface is a changed word on a deleted line (#f8d3d4, luminance
+diff --git a/apps/web/src/lib/syntaxHighlighting.test.ts b/apps/web/src/lib/syntaxHighlighting.test.ts
+index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4db99a1208 100644
+--- a/apps/web/src/lib/syntaxHighlighting.test.ts
++++ b/apps/web/src/lib/syntaxHighlighting.test.ts
+@@ -4,6 +4,62 @@ import { describe, expect, it } from "vite-plus/test";
+ import { getSyntaxHighlighterPromise } from "./syntaxHighlighting";
+ import { DIFF_THEME_NAMES } from "./diffRendering";
+ 
++it.each([
++  {
++    appearance: "light" as const,
++    colors: [
++      "#7c6f64",
++      "#9d0006",
++      "#79740e",
++      "#076678",
++      "#b57614",
++      "#8f3f71",
++      "#427b58",
++      "#af3a03",
++      "#3c3836",
++    ],
++  },
++  {
++    appearance: "dark" as const,
++    colors: [
++      "#695e55",
++      "#d4be98",
++      "#d4be98",
++      "#b2ba8e",
++      "#bac584",
++      "#d6b37b",
++      "#e6d5ae",
++      "#d4be98",
++      "#eead83",
++    ],
++  },
++])("renders Gruvware syntax colors in $appearance mode", async ({ appearance, colors }) => {
++  const highlighter = await getSyntaxHighlighterPromise("typescript");
++  const code =
++    '// greeting\nfunction greet(name: string) { const count = 42; return "hello" + name; }';
++  const { tokens } = highlighter.codeToTokens(code, {
++    lang: "typescript",
++    theme: DIFF_THEME_NAMES[appearance],
++  });
++  expect(tokens.map((line) => line.map((token) => token.content).join("")).join("\n")).toBe(code);
++  for (const [index, text] of [
++    "greeting",
++    "function",
++    "greet",
++    "name",
++    "hello",
++    "42",
++    "string",
++    "+",
++    "{",
++  ].entries()) {
++    expect(
++      tokens.flat().filter((token) => token.content.includes(text)),
++      text,
++    ).toEqual(expect.arrayContaining([expect.objectContaining({ color: colors[index] })]));
++  }
++});
++
+ describe("dialect file types", () => {
+   it.each([
+     ["src/init.luau", "lua"],
+@@ -14,6 +70,22 @@ describe("dialect file types", () => {
+   });
+ });
+ 
++it.each(["light", "dark"] as const)(
++  "keeps raw diff additions and removals distinct in %s mode",
++  async (appearance) => {
++    const highlighter = await getSyntaxHighlighterPromise("diff");
++    const { tokens } = highlighter.codeToTokens("-old\n+new", {
++      lang: "diff",
++      theme: DIFF_THEME_NAMES[appearance],
++    });
++    const removed = tokens[0]!.find((token) => token.content.includes("old"))?.color;
++    const added = tokens[1]!.find((token) => token.content.includes("new"))?.color;
++    expect(removed).toBeDefined();
++    expect(added).toBeDefined();
++    expect(removed).not.toBe(added);
++  },
++);
++
+ it.each([
+   "asm",
+   "assembly",
 diff --git a/apps/web/src/lib/gruvwareSyntaxTheme.ts b/apps/web/src/lib/gruvwareSyntaxTheme.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64b73b423c
@@ -176,106 +279,3 @@ index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64
 +    "zed",
 +  );
 +}
-diff --git a/apps/web/src/lib/readableSyntaxTheme.ts b/apps/web/src/lib/readableSyntaxTheme.ts
-index 7f4c9e5056a92f53c111a72568e6eb41e8170280..f8b5ea280a2fdcfa7c50ed57fb47529aebb5d9a5 100644
---- a/apps/web/src/lib/readableSyntaxTheme.ts
-+++ b/apps/web/src/lib/readableSyntaxTheme.ts
-@@ -1,7 +1,7 @@
- import { getResolvedOrResolveTheme, registerCustomTheme, type DiffsTheme } from "@pierre/diffs";
- 
- /** pierre-light with every syntax color darkened until it reads on every light code surface. */
--export const READABLE_LIGHT_THEME_NAME = "t3-light";
-+const READABLE_LIGHT_THEME_NAME = "t3-light";
- 
- const MIN_CONTRAST = 4.5;
- // The darkest light code surface is a changed word on a deleted line (#f8d3d4, luminance
-diff --git a/apps/web/src/lib/syntaxHighlighting.test.ts b/apps/web/src/lib/syntaxHighlighting.test.ts
-index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4db99a1208 100644
---- a/apps/web/src/lib/syntaxHighlighting.test.ts
-+++ b/apps/web/src/lib/syntaxHighlighting.test.ts
-@@ -4,6 +4,62 @@ import { describe, expect, it } from "vite-plus/test";
- import { getSyntaxHighlighterPromise } from "./syntaxHighlighting";
- import { DIFF_THEME_NAMES } from "./diffRendering";
- 
-+it.each([
-+  {
-+    appearance: "light" as const,
-+    colors: [
-+      "#7c6f64",
-+      "#9d0006",
-+      "#79740e",
-+      "#076678",
-+      "#b57614",
-+      "#8f3f71",
-+      "#427b58",
-+      "#af3a03",
-+      "#3c3836",
-+    ],
-+  },
-+  {
-+    appearance: "dark" as const,
-+    colors: [
-+      "#695e55",
-+      "#d4be98",
-+      "#d4be98",
-+      "#b2ba8e",
-+      "#bac584",
-+      "#d6b37b",
-+      "#e6d5ae",
-+      "#d4be98",
-+      "#eead83",
-+    ],
-+  },
-+])("renders Gruvware syntax colors in $appearance mode", async ({ appearance, colors }) => {
-+  const highlighter = await getSyntaxHighlighterPromise("typescript");
-+  const code =
-+    '// greeting\nfunction greet(name: string) { const count = 42; return "hello" + name; }';
-+  const { tokens } = highlighter.codeToTokens(code, {
-+    lang: "typescript",
-+    theme: DIFF_THEME_NAMES[appearance],
-+  });
-+  expect(tokens.map((line) => line.map((token) => token.content).join("")).join("\n")).toBe(code);
-+  for (const [index, text] of [
-+    "greeting",
-+    "function",
-+    "greet",
-+    "name",
-+    "hello",
-+    "42",
-+    "string",
-+    "+",
-+    "{",
-+  ].entries()) {
-+    expect(
-+      tokens.flat().filter((token) => token.content.includes(text)),
-+      text,
-+    ).toEqual(expect.arrayContaining([expect.objectContaining({ color: colors[index] })]));
-+  }
-+});
-+
- describe("dialect file types", () => {
-   it.each([
-     ["src/init.luau", "lua"],
-@@ -14,6 +70,22 @@ describe("dialect file types", () => {
-   });
- });
- 
-+it.each(["light", "dark"] as const)(
-+  "keeps raw diff additions and removals distinct in %s mode",
-+  async (appearance) => {
-+    const highlighter = await getSyntaxHighlighterPromise("diff");
-+    const { tokens } = highlighter.codeToTokens("-old\n+new", {
-+      lang: "diff",
-+      theme: DIFF_THEME_NAMES[appearance],
-+    });
-+    const removed = tokens[0]!.find((token) => token.content.includes("old"))?.color;
-+    const added = tokens[1]!.find((token) => token.content.includes("new"))?.color;
-+    expect(removed).toBeDefined();
-+    expect(added).toBeDefined();
-+    expect(removed).not.toBe(added);
-+  },
-+);
-+
- it.each([
-   "asm",
-   "assembly",

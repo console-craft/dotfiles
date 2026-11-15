@@ -3,10 +3,11 @@
 ## Provenance
 
 - Upstream: `https://github.com/pingdotgg/t3code.git`.
-- Original base: `v0.1.6`, commit `2359643cffa6ba9ee84d6f2694b935de54a8013e`.
-- Syntax commit: `ef38d339405a792cd86f3a79fce3cd3a0ccbff4b`.
-- The other patches preserve subsequent tracked, uncommitted appearance and packaging edits from the original `override` checkout. Together they capture all 18 changed files relative to the base, not just the six committed files.
-- These snapshots replay exactly on the original base. Newer releases may require a semantic port; compatibility with future upstream releases is not guaranteed.
+- Current patch base: `v0.1.9`, commit `24e77473ecf41bc1f7142529c7911c1c1aae1d76`.
+- Original customization base: `v0.1.6`, commit `2359643cffa6ba9ee84d6f2694b935de54a8013e`; syntax commit `ef38d339405a792cd86f3a79fce3cd3a0ccbff4b`.
+- The patches preserve the original syntax, subsequent appearance edits, and packaging safeguards across all 18 changed files. They were rebased onto v0.1.9 without replacing upstream functionality.
+- These snapshots replay exactly on the current patch base. Later releases may require a semantic port; compatibility with future upstream releases is not guaranteed. Do not select v0.1.9 merely because it is this snapshot's base: resolve the latest stable release each run.
+- The v0.1.9 port retains Pierre 1.7's built-in find styling, the sidebar's new `Setting up` status (sharing the Working color), Markdown's upstream bold weight, and Calendar-permission packaging tests. Recheck these surfaces after future viewer/sidebar changes.
 
 ## Ordered assets
 

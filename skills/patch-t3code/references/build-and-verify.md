@@ -11,13 +11,14 @@ Use the repository's dependency installation command in the isolated worktree (o
 ## Checks before packaging
 
 - Inspect `git diff --check` and the final diff against the chosen upstream tag, including any semantic port.
-- Run the current changed-file checks and focused tests required by repository instructions. At the original base these include `vp run check:changed` and:
+- Run the current changed-file checks and focused tests required by repository instructions. At v0.1.9 use `vp run check:changed <selected-release-tag>` so a stale remote-main reference does not include unrelated upstream changes. Focused checks include:
 
   ```text
-  vp test run apps/web/src/lib/syntaxHighlighting.test.ts apps/web/src/components/composerCodeBlockHighlight.test.ts scripts/build-desktop-artifact.test.ts
+  vp test run apps/web/src/lib/syntaxHighlighting.test.ts apps/web/src/lib/diffRendering.test.ts apps/web/src/components/composerCodeBlockHighlight.test.ts apps/web/src/themePalette.test.ts scripts/build-desktop-artifact.test.ts
   ```
 
   Discover adjacent theme/diff tests in the selected release and include relevant ones. Use scoped lint, format and type checks as prescribed there. Report failures by name, including unrelated ones; do not disable tests to make the build pass. Run broader suites only when requested or required by applicable instructions.
+- Browser tests need the Chromium revision matching the selected release's Playwright dependency. At v0.1.9 the installed CLI is `playwright-core` in the `scripts` workspace, not a root `playwright` binary. If its browser is missing, run `vp exec playwright-core install chromium --only-shell` from `scripts/` when dependency downloads are authorized, then rerun the failed gate. Do not alter test configuration or use a mismatched cached browser to hide the failure.
 - Verify both light and dark syntax registration, theme selection, composer expectations, and worker integration. Test the packaging regressions, including rejection of missing desktop entries. For manually ported logic add focused regression coverage; for palette-only changes use computed colors and a visual pass rather than brittle markup tests.
 - Build in a tree without your dev watcher writing the same output directories. Stop only processes you started and tracked, never kill by name/pattern or disrupt the user's running app/server. Interference from a watcher was suspected in an earlier incomplete build, not proven.
 
@@ -33,9 +34,17 @@ Read CLI help and current script definitions. At the original base the generic e
 | Windows | `--platform win --target nsis`; explicit supported architecture |
 | Linux | `--platform linux --target AppImage`; confirm format/architecture support |
 
-Use the release version resolved from the selected tag, not a hard-coded `0.1.6` or a possibly stale workspace manifest. The original base contained manifests reporting `0.1.5`; explicit `--build-version 0.1.6` corrected its packaged version. Verify how future tags map to valid build versions rather than stripping arbitrary suffixes.
+Use the release version resolved from the selected tag, not a hard-coded version or a possibly stale workspace manifest. Even the v0.1.9 tag contains workspace manifests reporting `0.1.8`; pass `--build-version 0.1.9` for that tag. Verify how future tags map to valid build versions rather than stripping arbitrary suffixes.
 
 Write into a unique candidate output directory and retain the stage/logs for payload inspection. Do not overwrite a previously verified artifact. Avoid exposing credentials or publishing builds: no release/upload/install action is authorized by this skill.
+
+Packaging can exceed a tool's default two-minute command limit. Use a sufficiently long or unlimited timeout for the tracked background build, and wait for its completion notification rather than polling or starting a duplicate build.
+
+### Update feeds on custom builds
+
+Leave the official auto-update feed unconfigured for a Gruvware build. Upstream's builder uses `T3CODE_DESKTOP_UPDATE_REPOSITORY` or `GITHUB_REPOSITORY` to generate `Resources/app-update.yml`; without one, the app reports “Updates unavailable” / “no update feed is configured.” This is expected, not proof it is on the latest release.
+
+Inspect and remove inherited feed-repository overrides from the build child environment so CI variables do not accidentally enable official updates. An installed official update would replace the patched binaries, not reapply these patches. Check upstream releases and rebuild through this skill instead. A separately hosted patched-artifact feed is outside this workflow.
 
 ## Inspect the artifact, then launch the packaged app
 
@@ -46,6 +55,7 @@ Write into a unique candidate output directory and retain the stage/logs for pay
 3. Mount/extract into an owned temporary location without running the installer against the live install. Launch the **packaged executable**, not `vp dev`, a source entry, or only Electron `--version`. If the format cannot be safely unpacked/launched on this host, stop at the verified build and state the remaining target-host test.
 4. Before starting it, inspect the selected release's desktop user-data resolution and establish **both** disposable T3 state and disposable Electron profile paths. See isolation below. No existing credentials, projects, conversations, scheduled jobs, or database should be needed. Disable auto-update in the test process using the supported setting (originally `T3CODE_DISABLE_AUTO_UPDATE=1`).
 5. Capture process logs and wait for the actual packaged UI and local backend connection to become ready, with bounded deadlines and early-exit handling. Verify no missing-module/worker errors, blank window, backend failure, or premature exit. A sidebar alone is insufficient to prove backend readiness: confirm the local connection's ready state or equivalent health evidence. Do not require a real paid provider turn or sign-in.
+   - A fresh v0.1.9 profile first shows onboarding, not the sidebar. Choose **Start without an agent** in the disposable profile. Verify its local backend through the bootstrap URL's `/.well-known/t3/environment` descriptor and confirm `serverVersion` matches the selected release.
 6. Check the appearance checklist in `patches.md` in the packaged app, including file Markdown as well as chat, code/diffs, and light mode. Use test-only fixtures or computed-style specimens in the isolated profile when real content is unavailable; distinguish this from exercising actual component states. Import the supplied JSON into **only that disposable profile** if needed for theme-role validation. Record any surface not exercised.
 7. Close only the app/backend processes you spawned, by tracked handles/PIDs. Preserve logs, unmount your test mounts and clean only owned disposable paths after inspection. Compute SHA-256 for each delivered artifact with a native tool or standard library, and report its absolute path and verification results. Do not install it or replace the live app automatically.
 
@@ -53,7 +63,7 @@ Write into a unique candidate output directory and retain the stage/logs for pay
 
 `T3CODE_HOME` isolates backend state but **does not by itself isolate Electron's production profile**. Originally, the production profile was resolved separately as `t3code-v2` beneath Electron's app-data directory, and Windows could migrate legacy `Local State`. A Chromium `--user-data-dir` argument may be overridden by the app's explicit `setPath`; inspect the current source rather than trusting that switch.
 
-- **macOS:** the original app honored a disposable `HOME` for `Library/Application Support/t3code-v2`; set a separate disposable `T3CODE_HOME` too. Confirm that resolution before launch on the selected release.
+- **macOS:** the app honors a disposable `HOME` for `Library/Application Support/t3code-v2`; set a separate disposable `T3CODE_HOME` too. Confirm that resolution before launch on the selected release. A fresh HOME can block Electron credential storage on a native default-Keychain prompt. For an isolated UI smoke test, `--use-mock-keychain` is the test-only switch used by the repository's Playwright Electron harness. Use it only with disposable data; report that real Keychain access and sign-in remain untested. Never add this switch to the distributed build or the user's normal launch, change the system's default keychain, or copy/symlink live keychains into the fixture.
 - **Linux:** inspect Electron/T3 resolution; use disposable `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME` and `T3CODE_HOME` as applicable, while retaining the display/session access needed to launch.
 - **Windows:** inspect how Electron resolves app data; a temporary `HOME` alone is not sufficient. Use disposable `USERPROFILE`, `APPDATA`, `LOCALAPPDATA` and `T3CODE_HOME` only after confirming they redirect the selected app's paths. If OS-known-folder resolution still reaches real data, use a sandbox/disposable user or ask for a safe test environment instead of guessing.
 

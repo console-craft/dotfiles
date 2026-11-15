@@ -29,4 +29,4 @@ Produce a verified Gruvware desktop build from upstream source. These are compil
 - Replaying only the original syntax commit misses later interface and packaging changes.
 - The theme JSON does not replace the patches; renaming its file does not rename its internal theme identity.
 - A successful package command, checksum, or signature does not prove the app starts.
-- Official updates replace the compiled customization; re-run this workflow to rebuild it.
+- “No update feed is configured” is expected for these local builds. Official updates would replace the customization; re-run this workflow to rebuild it.

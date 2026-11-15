@@ -11,10 +11,10 @@ index 3d7e5520ac8c40ae6ace960197fe076772f63723..6cc25d012a9bc41a73ad94602a3d08b8
          className={cn(
            "size-full overflow-hidden rounded-[25%] font-mono select-none",
 diff --git a/apps/web/src/components/chat/SideChatPane.tsx b/apps/web/src/components/chat/SideChatPane.tsx
-index 1a5bd1141b31f0cf34414e164de1de43d5e06053..77697616d7585418389b3648e6b9dffc24688221 100644
+index 2f430e563925ebf23b68b27c6ae39c0a9b17313d..44f9c721b24974980095c3e61ddd46096917d33f 100644
 --- a/apps/web/src/components/chat/SideChatPane.tsx
 +++ b/apps/web/src/components/chat/SideChatPane.tsx
-@@ -125,7 +125,7 @@ export default function SideChatPane(props: {
+@@ -129,7 +129,7 @@ export default function SideChatPane(props: {
    return (
      <div data-side-chat-pane className="flex h-full min-h-0 flex-col">
        <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border pr-1 pl-3">
@@ -24,7 +24,7 @@ index 1a5bd1141b31f0cf34414e164de1de43d5e06053..77697616d7585418389b3648e6b9dffc
          </span>
          <Tooltip>
 diff --git a/apps/web/src/components/diffs/StyledDiffCodeView.tsx b/apps/web/src/components/diffs/StyledDiffCodeView.tsx
-index 99049e280cb5aecf9ee0b0262a9773128de6a91f..5c8f0d67548bbee013a3ab604fc9ae077438e4d3 100644
+index a64e8d887d1f4665910ebca2e4404e92871f9ecc..7999749f7ed959399df5f92bb5d016fd2dfd64e5 100644
 --- a/apps/web/src/components/diffs/StyledDiffCodeView.tsx
 +++ b/apps/web/src/components/diffs/StyledDiffCodeView.tsx
 @@ -20,6 +20,18 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
@@ -43,10 +43,10 @@ index 99049e280cb5aecf9ee0b0262a9773128de6a91f..5c8f0d67548bbee013a3ab604fc9ae07
 +  ) !important;
 +}
 +
- :is(
-   [data-line],
-   [data-line-annotation],
-@@ -148,6 +160,7 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+ /* Translucent find matches keep the syntax colours under them. */
+ :host {
+   --diffs-bg-search-match-override: light-dark(#ff963288, #ff963266);
+@@ -159,6 +171,7 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
     descenders; give the clipped names room inside the fixed-height header. */
  [data-diffs-header] :is([data-title], [data-prev-name]) {
    line-height: 16px !important;
@@ -54,7 +54,7 @@ index 99049e280cb5aecf9ee0b0262a9773128de6a91f..5c8f0d67548bbee013a3ab604fc9ae07
  }
  
  [data-diffs-header] [data-metadata] {
-@@ -177,7 +190,10 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
+@@ -188,7 +201,10 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
  }
  
  [data-title]:hover {
@@ -115,10 +115,10 @@ index feec84fac0110a03d62b730a59466fba06bb13ce..469d5e7fb3340f2bb1a535690236835a
            <span className="flex shrink-0 items-center gap-1 text-2xs">{signals}</span>
          ) : null}
 diff --git a/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx b/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
-index a73c3f21f0b390c1114c7e38c59c7f654e944f16..3be8cd6e4211030490e7f2b6f36f25f44c6ac61c 100644
+index 38b1e53bf057bd4f22033f3fa18be04a93899dd1..fdbd504877136af391c28b0c779cd5e104d9f881 100644
 --- a/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
 +++ b/apps/web/src/components/sidebar/SidebarProjectFolderHeader.tsx
-@@ -78,7 +78,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
+@@ -76,7 +76,7 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
          className="flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-(--control-radius) px-(--sidebar-row-content-inset) text-left outline-none hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
        >
          <ProjectFavicon project={group} className="size-4 shrink-0" />
@@ -128,19 +128,19 @@ index a73c3f21f0b390c1114c7e38c59c7f654e944f16..3be8cd6e4211030490e7f2b6f36f25f4
          </span>
          {dot ? (
 diff --git a/apps/web/src/components/sidebar/SidebarThreadRow.tsx b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
-index bc89186d93737ca48b64836c2094a5a686bf6452..0efaf2aa6fd3d665954282659b1824f8597f954c 100644
+index 05e898420047005fa5d384571a38459243e935db..e4c7af477f25b68f9c8ca920b5341eb724e4aede 100644
 --- a/apps/web/src/components/sidebar/SidebarThreadRow.tsx
 +++ b/apps/web/src/components/sidebar/SidebarThreadRow.tsx
-@@ -725,7 +725,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
-       ? {
-           label: thread.goal?.status === "active" ? "Goal" : "Working",
+@@ -745,7 +745,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+                 ? "Goal"
+                 : "Working",
            icon: "working" as const,
 -          className: "text-info-foreground",
 +          className: "text-info-foreground dark:text-gruvware-orange",
          }
        : status === "waiting"
          ? {
-@@ -773,7 +773,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
+@@ -793,7 +793,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                        ? {
                            label: "Done",
                            icon: "done" as const,
@@ -150,7 +150,7 @@ index bc89186d93737ca48b64836c2094a5a686bf6452..0efaf2aa6fd3d665954282659b1824f8
                        : null;
    const isWokeStatus = topStatus?.icon === "woke";
 diff --git a/apps/web/src/index.css b/apps/web/src/index.css
-index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e211f6d9b 100644
+index 40daa0da7dcc8df2927aa40a518512e7a8b4e87f..de73b009c171b7a310db89383ec92c228f2a011a 100644
 --- a/apps/web/src/index.css
 +++ b/apps/web/src/index.css
 @@ -272,6 +272,8 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
@@ -288,7 +288,7 @@ index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e
  }
  
  html[data-theme-id] [data-panel-layout-controls] [data-slot="toggle"]:disabled,
-@@ -1708,6 +1770,10 @@ html[data-theme-id="t3-chat"] [data-app-sidebar] {
+@@ -1709,6 +1771,10 @@ html[data-theme-id="t3-chat"] [data-app-sidebar] {
      color-mix(in srgb, var(--sidebar-border) var(--appearance-contrast-base), transparent),
      var(--sidebar-foreground) var(--appearance-contrast-border-boost)
    );
@@ -299,7 +299,7 @@ index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e
  }
  
  body {
-@@ -2135,6 +2201,40 @@ code {
+@@ -2140,6 +2206,40 @@ code {
    font-size: 0.85em;
  }
  
@@ -338,9 +338,9 @@ index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e
 +}
 +
  .chat-markdown strong {
-   font-weight: 600;
+   font-weight: 700;
  }
-@@ -2274,6 +2374,11 @@ code {
+@@ -2288,6 +2388,11 @@ code {
    --diff-deletion: var(--destructive);
    --diff-addition-foreground: light-dark(var(--color-emerald-700), var(--color-emerald-400));
    --diff-deletion-foreground: light-dark(var(--color-red-700), var(--color-red-400));
@@ -353,7 +353,7 @@ index e1865167912526a23901adebf84fa768d9bffff8..6ee82e3d57fb86087f45a29ae480022e
  
  /* Chat width setting. Comfortable keeps the default --chat-content-max-width,
 diff --git a/apps/web/src/themePalette.ts b/apps/web/src/themePalette.ts
-index e7d9c5d5bf2fa298284780ae5fe688ec8f968845..4203a9c20aed575533cc259f576f9a290049fc38 100644
+index c86d1350391573c26ccaca1110a725f39c315da8..43ed94294168018caf49ed4d3a6874e894b40ad5 100644
 --- a/apps/web/src/themePalette.ts
 +++ b/apps/web/src/themePalette.ts
 @@ -399,6 +399,15 @@ export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors
