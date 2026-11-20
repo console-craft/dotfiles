@@ -3,6 +3,12 @@
   email = ovidiu.ispas@gmail.com
 [includeIf "gitdir:~/Projects/console-craft/"]
   path = ~/.gitconfig-console-craft
+[credential "https://github.com"]
+  helper =
+  helper = !gh auth git-credential
+[url "https://github.com/"]
+  insteadOf = git@github.com:
+  insteadOf = ssh://git@github.com/
 [init]
   defaultBranch = main
 [pull]
