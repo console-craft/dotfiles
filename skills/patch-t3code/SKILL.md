@@ -1,32 +1,23 @@
 ---
 name: patch-t3code
-description: Use when updating or rebuilding a locally customized T3 Code desktop app, restoring Ovi's Gruvware appearance after upstream updates, or applying the saved Gruvware source patches on a new machine.
+description: Use when checking for a new stable T3 Code release, building Ovi's customized Gruvcraft desktop app, or restoring its syntax highlighting and terminal ANSI colors after an upstream update.
 ---
 
 # Patch T3 Code
 
-Produce a verified Gruvware desktop build from upstream source. These are compiled source changes, not runtime injection or installed-app edits. Default to the **latest stable GitHub release**, not `main`, unless the user requests another revision.
+Keep the app patch small: Gruvcraft syntax for light and dark and the two terminal ANSI palettes. The UI palette and CSS belong to the separate Gruvcraft theme JSON. Preserve the official install, live data, and unrelated work.
 
-## References — read before acting
+## References
 
-| Reference | Purpose |
-| --- | --- |
-| [Patch inventory](references/patches.md) | Provenance, required appearance, ordered patches, conflict handling |
-| [Build and verification](references/build-and-verify.md) | Target selection, prerequisites, checks, packaging, isolated launch |
-| [Theme JSON](references/t3code-gruvware.json) | Optional import through T3 theme settings; separate from source patches |
+- [Patch inventory](references/patches.md): replay, conflicts, and acceptance checks.
+- [Build and verification](references/build-and-verify.md): target, packaging, isolated launch, and the [last-verified build record](references/last-verified.md).
+- [Gruvcraft theme JSON](../../t3code-gruvcraft.json): resolve from this skill's real dotfiles directory if loaded through a symlink. Import in the disposable profile only during testing.
 
-## Workflow
+## Check, build, verify
 
-1. **Find the checkout.** Prefer the user's path, current project, then known worktrees and `~/Projects/t3code`. Historical location: `~/Projects/console-craft/t3code`; neither is guaranteed. On Windows resolve the actual home directory and native paths. Inspect Git remotes and `package.json` to confirm T3 Code. Ask if absent or ambiguous; propose cloning `https://github.com/pingdotgg/t3code.git` into an agreed, unused directory. Do not scan the entire disk.
-2. **Inspect and protect.** Read that checkout's applicable `AGENTS.md` and build docs. Record branch, HEAD, tracked/untracked changes, index, and remotes. Never reset, clean, stash, stage, commit, or overwrite existing work automatically. The saved patches are the complete customization baseline; identify any newer local customization before proceeding and ask how to carry it forward.
-3. **Resolve the update.** Read upstream's latest stable release metadata, fetch its exact tag from the verified upstream remote, and record its commit. If metadata/network access fails, report it rather than substituting `main` or claiming a cached release is latest. Create a uniquely named sibling worktree/branch at that tag. Leave the original checkout unchanged; use an existing worktree only after verifying its purpose and state.
-4. **Apply in order.** Read the inventory; run `git apply --check` then `git apply` for **each** numbered patch, from the isolated checkout using absolute reference paths. Test each against the result of its predecessor. Inspect failures for already-applied, partial, or upstream-replaced behavior; never silently drop hunks.
-5. **Confirm the build target.** Detect the host OS/architecture, but confirm the target OS, architecture, and artifact format if unspecified. Do not infer DMG/arm64 from these references. Follow the build reference using the selected release's current tooling.
-6. **Verify and hand back.** Run focused checks, build, inspect the packaged payload, and launch the packaged app with disposable data. Report exact release/commit, patch status, target, commands/results, artifact paths, SHA-256, signing/notarization status, and unverified items. If launch is unavailable, call it built but **not launch-verified**. Theme import is allowed in the disposable test profile only. Do not install, replace the live app, change the user's actual settings/themes, or push without permission.
-
-## Common mistakes
-
-- Replaying only the original syntax commit misses later interface and packaging changes.
-- The theme JSON does not replace the patches; renaming its file does not rename its internal theme identity.
-- A successful package command, checksum, or signature does not prove the app starts.
-- “No update feed is configured” is expected for these local builds. Official updates would replace the customization; re-run this workflow to rebuild it.
+1. **Check upstream.** On [pingdotgg/t3code](https://github.com/pingdotgg/t3code), **Watch → Custom → Releases** is an optional alert and can include nightlies. Resolve stable independently with `gh api repos/pingdotgg/t3code/releases/latest --jq .tag_name`. Verify the upstream origin and exact tag commit (`git ls-remote <upstream> "refs/tags/<tag>" "refs/tags/<tag>^{}"`; prefer the peeled commit when present). If metadata is unavailable, stop rather than using `main` or claiming a cached tag is latest. Build a different revision only on explicit request.
+2. **Decide whether to build.** Compare the requested OS, architecture and format against the last-verified record. If the latest stable tag/commit matches and the recorded artifact still matches its checksum, report it and stop unless explicitly asked to rebuild. A first build or missing artifact needs a build. A GitHub notification, an installed version, and a failed build are not verified baselines. For a check-only request, report the comparison; don't fetch or build.
+3. **Protect the checkout.** Prefer the user's path, current project, known worktrees, then `~/Projects/t3code` or `~/Projects/console-craft/t3code`. If absent, ask before cloning the verified upstream into an unused path. Read applicable `AGENTS.md` and build docs. Record HEAD, branch, index, all changes, remotes, and worktrees. Use a new sibling worktree/branch at the verified tag. Never reset, clean, stash, stage, commit, or overwrite existing work automatically.
+4. **Apply the minimum.** Check whether upstream supports the intended syntax and ANSI colors without patching. For each still-needed patch, run `git apply --check`, then apply it from the isolated worktree. On failure, a passing reverse check calls for semantic verification before skipping; if neither applies, inspect and port the needed behavior or stop on unexplained conflicts. Keep legacy appearance patches out of modern builds. Only carry the macOS signing fix when needed.
+5. **Confirm target and verify.** Confirm OS, architecture, and artifact format if unspecified. Follow the build reference for the selected release. Keep the official updater feed out of the custom build; it would replace that app, not replay patches.
+6. **Record and hand back.** Advance the last-verified record only after focused checks, payload/signature checks, and isolated launch all pass. Report the tag/commit, patch status, commands/results, artifact paths, SHA-256, signing/notarization and gaps. If launch was not verified, withhold a ready-to-install claim and do not advance the record. Never install, overwrite the live app, change live settings, or push without permission.

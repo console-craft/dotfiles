@@ -1,70 +1,46 @@
-# Build and verify on the selected machine
+# Build and verify
 
-## Establish the target and prerequisites
+## Prepare the selected target
 
-Detect the host OS and CPU (including emulation where relevant), then confirm the **target** OS, architecture, and artifact format when the user has not specified them. Ask one concise question offering the host-native target first. An ARM64 Windows machine does not imply an x64 installer; macOS history does not imply a DMG. Do not promise cross-compilation: native modules, Rust, platform SDKs and signing may require the target host.
+- Confirm OS, CPU architecture, and artifact format. Use the target host or documented native toolchain; don't assume cross-compilation works. Ask before installing missing system tooling.
+- Read the selected tag's `AGENTS.md`, build docs, manifests, and `scripts/build-desktop-artifact.ts`. Use its Node and package-manager versions. For `v0.1.11`, install in the isolated worktree with `vp i --frozen-lockfile`; don't rewrite the lockfile to make a patch build.
+- Keep dev watchers out of the packaging tree. Stop only your own tracked processes. In each build/test child environment remove inherited `ELECTRON_RUN_AS_NODE`, development URL and `NODE_OPTIONS` overrides, and any signing/notarization settings not authorized for the build. Don't print credential values.
 
-Read the chosen release's `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, build docs, root/workspace manifests, lockfile, and `scripts/build-desktop-artifact.ts` before choosing commands. Use that revision's declared Node/package-manager versions. Discover existing `vp`, Node, Rust and required native/packaging tools; explain missing prerequisites and obtain approval before installing system tooling. Do not blindly source another machine's `~/.config/vite-plus/env` or run shell installers copied from historical notes.
+## Run focused checks and package
 
-Use the repository's dependency installation command in the isolated worktree (originally `vp i`); do not rewrite the lockfile to bypass dependency failures. Follow any setup-in-progress markers before starting a second install. Select environment changes only for your child process or restore the shell afterwards.
+Run `git diff --check`, inspect the source diff, then run the tag's changed-file and focused checks. At `v0.1.11`:
 
-## Checks before packaging
+```sh
+vp run check:changed v0.1.11
+vp test run apps/web/src/lib/{syntaxHighlighting,diffRendering,readableSyntaxTheme}.test.ts \
+  apps/web/src/components/composerCodeBlockHighlight.test.ts \
+  apps/web/src/components/ThreadTerminalDrawer.browser.test.tsx \
+  scripts/build-desktop-artifact.test.ts
+```
 
-- Inspect `git diff --check` and the final diff against the chosen upstream tag, including any semantic port.
-- Run the current changed-file checks and focused tests required by repository instructions. At v0.1.9 use `vp run check:changed <selected-release-tag>` so a stale remote-main reference does not include unrelated upstream changes. Focused checks include:
+Pass the chosen tag to the changed-file check, not a stale `main`. If Chromium is missing, install the matching Playwright revision (at this tag, `vp exec playwright-core install chromium --only-shell` in `scripts/`) and rerun. Report failed checks; don't disable them.
 
-  ```text
-  vp test run apps/web/src/lib/syntaxHighlighting.test.ts apps/web/src/lib/diffRendering.test.ts apps/web/src/components/composerCodeBlockHighlight.test.ts apps/web/src/themePalette.test.ts scripts/build-desktop-artifact.test.ts
-  ```
+Use `vp run dist:desktop:artifact --help` to confirm current arguments. Apple Silicon example:
 
-  Discover adjacent theme/diff tests in the selected release and include relevant ones. Use scoped lint, format and type checks as prescribed there. Report failures by name, including unrelated ones; do not disable tests to make the build pass. Run broader suites only when requested or required by applicable instructions.
-- Browser tests need the Chromium revision matching the selected release's Playwright dependency. At v0.1.9 the installed CLI is `playwright-core` in the `scripts` workspace, not a root `playwright` binary. If its browser is missing, run `vp exec playwright-core install chromium --only-shell` from `scripts/` when dependency downloads are authorized, then rerun the failed gate. Do not alter test configuration or use a mismatched cached browser to hide the failure.
-- Verify both light and dark syntax registration, theme selection, composer expectations, and worker integration. Test the packaging regressions, including rejection of missing desktop entries. For manually ported logic add focused regression coverage; for palette-only changes use computed colors and a visual pass rather than brittle markup tests.
-- Build in a tree without your dev watcher writing the same output directories. Stop only processes you started and tracked, never kill by name/pattern or disrupt the user's running app/server. Interference from a watcher was suspected in an earlier incomplete build, not proven.
+```sh
+env -u ELECTRON_RUN_AS_NODE -u T3CODE_DESKTOP_UPDATE_REPOSITORY -u GITHUB_REPOSITORY \
+  vp run dist:desktop:artifact --platform mac --arch arm64 --target dmg \
+  --build-version 0.1.11 --output-dir "$candidate_dir" --keep-stage
+```
 
-Unset inherited `ELECTRON_RUN_AS_NODE` for packaging/tests and launches: it makes Electron behave as Node and can cause misleading cross-architecture failures. Do this in the child environment, or use shell-appropriate temporary cleanup (POSIX `env -u`; PowerShell remove the environment entry and restore it in `finally`). Also inspect inherited development URLs, `NODE_OPTIONS`, and build/signing overrides rather than letting them contaminate a release build. Do not print secret values.
+Use the chosen tag's release version, not a potentially stale workspace version. Create a new candidate directory, retain the build log, and don't overwrite a verified artifact. macOS `dmg` also emits ZIP at `v0.1.11`; for Windows/Linux verify the target and supported architecture in the current builder. Track long-running builds and wait for completion notifications, not polling.
 
-## Package using current scripts
+The custom build must **not** have the official updater feed. The two repository overrides in the example can generate `Resources/app-update.yml`; inspect current builder defaults and check the actual output. An official update would replace the patched app. Do not change the stock app, live settings, or GitHub notification settings as part of a build.
 
-Read CLI help and current script definitions. At the original base the generic entry is `vp run dist:desktop:artifact --help`; it accepts explicit `--platform`, `--arch`, `--target`, `--build-version`, `--output-dir`, and `--keep-stage` options. Revalidate these against the chosen release.
+## Verify the actual payload and launch
 
-| Confirmed target | Original platform/target values (not defaults) |
-| --- | --- |
-| macOS | `--platform mac --target dmg` (also emits ZIP); explicit supported architecture |
-| Windows | `--platform win --target nsis`; explicit supported architecture |
-| Linux | `--platform linux --target AppImage`; confirm format/architecture support |
+1. Check DMG/ZIP integrity, version and architecture. Mount or extract into an owned temporary location, not `/Applications`. Compute SHA-256 for each delivered artifact. On macOS run `codesign --verify --deep --strict "$app"` and inspect the signature; local identity `-` is ad-hoc, **not** Developer ID or notarization. A modified Electron executable alone can report `Signature=adhoc` with no valid bundle resource seal. Do not override Gatekeeper or change system security.
+2. Inspect the candidate's ASAR with the release's tooling. At `v0.1.11` require nonempty `apps/desktop/dist-electron/{boot,compileCache,main,preload}.cjs` and `apps/server/dist/bin.mjs`. Follow the current main field and preload/server paths if they move. A successful builder self-check is not proof that Electron's entries are all present.
+3. Before launching, trace Electron user data **and** T3 backend data to distinct disposable paths, not the running install. `T3CODE_HOME` alone does not isolate Electron. On macOS use a disposable `HOME` (profile at `Library/Application Support/t3code-v2` on this tag), separate `T3CODE_HOME`, clean startup environment, `T3CODE_DISABLE_AUTO_UPDATE=true`, and `--use-mock-keychain` **only for the test process**. Confirm the runtime Electron `userData` path before interacting. Do not run the upstream `v0.1.11` smoke script unchanged: it deliberately leaves Electron's `HOME` real. On Linux verify disposable `HOME` and XDG paths; on Windows verify known-folder redirection or use a disposable user/sandbox. If isolation is uncertain, do not launch.
+4. Open the **packaged executable** and wait for the renderer and local backend. For `v0.1.11`, copy the repo's `scripts/fixtures/desktop-launch/statev2.sqlite` into disposable `T3CODE_HOME/userdata` and open the seeded thread. In an automated desktop test, the thread can be opened through the app's `#/<environmentId>/<threadId>` route when the sidebar is collapsed. Confirm `serverVersion` at `/.well-known/t3/environment` on the local backend URL from the desktop preload bridge. Use fixtures; don't sign in or start a paid provider turn.
+5. Load the unchanged Gruvcraft JSON in the disposable profile and follow the appearance checks in [patches.md](patches.md). Check an actual syntax token and a rendered terminal swatch in both appearances. Report which file/diff/composer checks used real packaged UI versus focused tests and disclose any gaps. Don't present a failed launch as verified even if the bundle signs.
+6. Close only tracked test processes and unmount the test volume. Keep checksums and logs with the artifact; clean only paths created for the test. Do not install or publish the candidate.
 
-Use the release version resolved from the selected tag, not a hard-coded version or a possibly stale workspace manifest. Even the v0.1.9 tag contains workspace manifests reporting `0.1.8`; pass `--build-version 0.1.9` for that tag. Verify how future tags map to valid build versions rather than stripping arbitrary suffixes.
+## Update the last-verified record
 
-Write into a unique candidate output directory and retain the stage/logs for payload inspection. Do not overwrite a previously verified artifact. Avoid exposing credentials or publishing builds: no release/upload/install action is authorized by this skill.
-
-Packaging can exceed a tool's default two-minute command limit. Use a sufficiently long or unlimited timeout for the tracked background build, and wait for its completion notification rather than polling or starting a duplicate build.
-
-### Update feeds on custom builds
-
-Leave the official auto-update feed unconfigured for a Gruvware build. Upstream's builder uses `T3CODE_DESKTOP_UPDATE_REPOSITORY` or `GITHUB_REPOSITORY` to generate `Resources/app-update.yml`; without one, the app reports “Updates unavailable” / “no update feed is configured.” This is expected, not proof it is on the latest release.
-
-Inspect and remove inherited feed-repository overrides from the build child environment so CI variables do not accidentally enable official updates. An installed official update would replace the patched binaries, not reapply these patches. Check upstream releases and rebuild through this skill instead. A separately hosted patched-artifact feed is outside this workflow.
-
-## Inspect the artifact, then launch the packaged app
-
-**A green build is not a launch test.** A previous checksum/signature-valid DMG could not start because `./main.cjs` was absent. The saved packaging patch guards against recurrence on macOS; inspect equivalent Windows/Linux payloads too.
-
-1. Confirm artifact existence, target architecture, selected version, and expected contents using platform tools. Inspect `app.asar`/unpacked resources with the repository's installed ASAR tooling. At the original base, essential entries include `apps/desktop/dist-electron/{boot,compileCache,main,preload}.cjs`, the server bundle, web assets and referenced worker bundles. Follow the current Electron `main` and build manifest if upstream reorganizes them. Do not treat old filenames as permanent architecture.
-2. Check installer/archive integrity and signatures using host tooling. Local macOS builds use ad-hoc identity `-`, without hardened runtime; this is **not Developer ID signing or Apple notarization**. Verify the actual result, do not infer signing from build configuration. Report Windows unsigned status/SmartScreen implications if applicable; never disable OS security or use secret credentials without authorization.
-3. Mount/extract into an owned temporary location without running the installer against the live install. Launch the **packaged executable**, not `vp dev`, a source entry, or only Electron `--version`. If the format cannot be safely unpacked/launched on this host, stop at the verified build and state the remaining target-host test.
-4. Before starting it, inspect the selected release's desktop user-data resolution and establish **both** disposable T3 state and disposable Electron profile paths. See isolation below. No existing credentials, projects, conversations, scheduled jobs, or database should be needed. Disable auto-update in the test process using the supported setting (originally `T3CODE_DISABLE_AUTO_UPDATE=1`).
-5. Capture process logs and wait for the actual packaged UI and local backend connection to become ready, with bounded deadlines and early-exit handling. Verify no missing-module/worker errors, blank window, backend failure, or premature exit. A sidebar alone is insufficient to prove backend readiness: confirm the local connection's ready state or equivalent health evidence. Do not require a real paid provider turn or sign-in.
-   - A fresh v0.1.9 profile first shows onboarding, not the sidebar. Choose **Start without an agent** in the disposable profile. Verify its local backend through the bootstrap URL's `/.well-known/t3/environment` descriptor and confirm `serverVersion` matches the selected release.
-6. Check the appearance checklist in `patches.md` in the packaged app, including file Markdown as well as chat, code/diffs, and light mode. Use test-only fixtures or computed-style specimens in the isolated profile when real content is unavailable; distinguish this from exercising actual component states. Import the supplied JSON into **only that disposable profile** if needed for theme-role validation. Record any surface not exercised.
-7. Close only the app/backend processes you spawned, by tracked handles/PIDs. Preserve logs, unmount your test mounts and clean only owned disposable paths after inspection. Compute SHA-256 for each delivered artifact with a native tool or standard library, and report its absolute path and verification results. Do not install it or replace the live app automatically.
-
-### User-data isolation is platform-specific
-
-`T3CODE_HOME` isolates backend state but **does not by itself isolate Electron's production profile**. Originally, the production profile was resolved separately as `t3code-v2` beneath Electron's app-data directory, and Windows could migrate legacy `Local State`. A Chromium `--user-data-dir` argument may be overridden by the app's explicit `setPath`; inspect the current source rather than trusting that switch.
-
-- **macOS:** the app honors a disposable `HOME` for `Library/Application Support/t3code-v2`; set a separate disposable `T3CODE_HOME` too. Confirm that resolution before launch on the selected release. A fresh HOME can block Electron credential storage on a native default-Keychain prompt. For an isolated UI smoke test, `--use-mock-keychain` is the test-only switch used by the repository's Playwright Electron harness. Use it only with disposable data; report that real Keychain access and sign-in remain untested. Never add this switch to the distributed build or the user's normal launch, change the system's default keychain, or copy/symlink live keychains into the fixture.
-- **Linux:** inspect Electron/T3 resolution; use disposable `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME` and `T3CODE_HOME` as applicable, while retaining the display/session access needed to launch.
-- **Windows:** inspect how Electron resolves app data; a temporary `HOME` alone is not sufficient. Use disposable `USERPROFILE`, `APPDATA`, `LOCALAPPDATA` and `T3CODE_HOME` only after confirming they redirect the selected app's paths. If OS-known-folder resolution still reaches real data, use a sandbox/disposable user or ask for a safe test environment instead of guessing.
-
-Clear inherited dev-server URLs, startup tokens, forced ports and Electron-as-Node settings in the smoke-test child environment. Do not reuse a production connection or running app instance. Confirm the paths are temporary **before launch**; if isolation cannot be established, do not launch and report the blocker. Never test migrations against the live database.
+Use the target row in [last-verified.md](last-verified.md). Record the stable tag, upstream commit, architecture/format, dated artifact path and SHA-256 only after all required gates pass. Verify the file against the recorded SHA-256 before reusing a row. If the build fails, including failure to launch, leave the previous good record unchanged. An OS upgrade, new computer, moved file, or new artifact format may require a fresh build; a GitHub Releases notification is not build evidence.

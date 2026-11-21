@@ -1,0 +1,39 @@
+diff --git a/scripts/build-desktop-artifact.test.ts b/scripts/build-desktop-artifact.test.ts
+index c9180ec3d3ae63cc35e80c368765424a5f23b5c1..1e7093c93aea980d844d0ad043f3bf00816b90c8 100644
+--- a/scripts/build-desktop-artifact.test.ts
++++ b/scripts/build-desktop-artifact.test.ts
+@@ -554,6 +554,22 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
+     ),
+   );
+ 
++  it.effect("ad-hoc signs local macOS builds without enabling hardened runtime", () =>
++    Effect.gen(function* () {
++      const config = yield* createBuildConfig(
++        "mac",
++        "dmg",
++        "0.1.11",
++        false,
++        false,
++        undefined,
++        undefined,
++      );
++      assert.propertyVal(config.mac, "identity", "-");
++      assert.propertyVal(config.mac, "hardenedRuntime", false);
++    }),
++  );
++
+   it.effect("names the Electron window class in the Linux desktop entry", () =>
+     Effect.gen(function* () {
+       const linux = yield* createBuildConfig(
+diff --git a/scripts/build-desktop-artifact.ts b/scripts/build-desktop-artifact.ts
+index 9d34e2412b327f03f20f88385ee835209ffa3b6b..073ad828a43fffa65b0f195251f07f1f21c7c219 100644
+--- a/scripts/build-desktop-artifact.ts
++++ b/scripts/build-desktop-artifact.ts
+@@ -2838,6 +2838,7 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
+     const repoRoot = yield* RepoRoot;
+     buildConfig.mac = {
+       target: target === "dmg" ? [target, "zip"] : [target],
++      ...(!signed ? { identity: "-", hardenedRuntime: false } : {}),
+       icon: "icon.icns",
+       category: "public.app-category.developer-tools",
+       extendInfo: {

@@ -1,9 +1,9 @@
 diff --git a/apps/web/src/components/DiffWorkerPoolProvider.tsx b/apps/web/src/components/DiffWorkerPoolProvider.tsx
-index a40d8e20c7bacb8552658b5e1301f05a93452969..1311a61056a5468701c52ff51c183e77cc20f6c4 100644
+index d1286df7719388511a37723f48d8825061a1881b..d4f740b5ddf75c6b23a2bb1f0fe6b56db4dfede6 100644
 --- a/apps/web/src/components/DiffWorkerPoolProvider.tsx
 +++ b/apps/web/src/components/DiffWorkerPoolProvider.tsx
-@@ -4,12 +4,12 @@ import DiffsWorker from "@pierre/diffs/worker/worker.js?worker";
- import * as Schema from "effect/Schema";
+@@ -5,12 +5,12 @@ import * as Schema from "effect/Schema";
+ import { T } from "gt-react";
  import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
  import { getRenderedAppearance, subscribeRenderedAppearance } from "../hooks/useTheme";
 -import { resolveDiffThemeName } from "../lib/diffRendering";
@@ -18,7 +18,7 @@ index a40d8e20c7bacb8552658b5e1301f05a93452969..1311a61056a5468701c52ff51c183e77
  }) {
    override get message(): string {
 diff --git a/apps/web/src/components/composerCodeBlockHighlight.test.ts b/apps/web/src/components/composerCodeBlockHighlight.test.ts
-index de3236be7ae23f55c485842411fa466cb9070563..07960e8c1ea8a21aeb0166449f933e2a8a5ad0c6 100644
+index fde9084c2e4d4c79e01781e6789f1088aded4fed..762ae2224317d654fb532fc176df269c832e7725 100644
 --- a/apps/web/src/components/composerCodeBlockHighlight.test.ts
 +++ b/apps/web/src/components/composerCodeBlockHighlight.test.ts
 @@ -5,14 +5,14 @@ import StarterKit from "@tiptap/starter-kit";
@@ -39,13 +39,13 @@ index de3236be7ae23f55c485842411fa466cb9070563..07960e8c1ea8a21aeb0166449f933e2a
  function fakeHighlighter(colorFor: (content: string) => string | undefined) {
    return {
 diff --git a/apps/web/src/lib/diffRendering.ts b/apps/web/src/lib/diffRendering.ts
-index 09b4d792b0e52a7dcbc271d38c6ba957c17584d3..fac0ea3d7d8fd3a51c7709f8790ec691f6bb789d 100644
+index efba9f900322d371b5785d480a8b7dc9bb9952af..5c0422580dbf1cb05b08e1f443d6f719bcf374bc 100644
 --- a/apps/web/src/lib/diffRendering.ts
 +++ b/apps/web/src/lib/diffRendering.ts
-@@ -1,13 +1,9 @@
- import { parsePatchFiles } from "@pierre/diffs/utils/parsePatchFiles";
- import { parseDiffFromFile } from "@pierre/diffs";
- import type { FileDiffMetadata } from "@pierre/diffs/types";
+@@ -4,13 +4,9 @@ import type { FileDiffMetadata } from "@pierre/diffs/types";
+ import { msg } from "gt-react";
+ 
+ import { m, type MessageResolver } from "../i18n/messages";
 -import { READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
 +import { GRUVWARE_THEME_NAMES } from "./gruvwareSyntaxTheme";
  
@@ -58,27 +58,19 @@ index 09b4d792b0e52a7dcbc271d38c6ba957c17584d3..fac0ea3d7d8fd3a51c7709f8790ec691
  
  export type DiffThemeName = (typeof DIFF_THEME_NAMES)[keyof typeof DIFF_THEME_NAMES];
  
-diff --git a/apps/web/src/lib/readableSyntaxTheme.ts b/apps/web/src/lib/readableSyntaxTheme.ts
-index 7f4c9e5056a92f53c111a72568e6eb41e8170280..f8b5ea280a2fdcfa7c50ed57fb47529aebb5d9a5 100644
---- a/apps/web/src/lib/readableSyntaxTheme.ts
-+++ b/apps/web/src/lib/readableSyntaxTheme.ts
-@@ -1,7 +1,7 @@
- import { getResolvedOrResolveTheme, registerCustomTheme, type DiffsTheme } from "@pierre/diffs";
- 
- /** pierre-light with every syntax color darkened until it reads on every light code surface. */
--export const READABLE_LIGHT_THEME_NAME = "t3-light";
-+const READABLE_LIGHT_THEME_NAME = "t3-light";
- 
- const MIN_CONTRAST = 4.5;
- // The darkest light code surface is a changed word on a deleted line (#f8d3d4, luminance
 diff --git a/apps/web/src/lib/syntaxHighlighting.test.ts b/apps/web/src/lib/syntaxHighlighting.test.ts
-index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4db99a1208 100644
+index e14431990f10776d73cfcb4fc75722e7a3ec658f..3b6938c059f3ed338c4d5abca691d82b3b63b8fc 100644
 --- a/apps/web/src/lib/syntaxHighlighting.test.ts
 +++ b/apps/web/src/lib/syntaxHighlighting.test.ts
-@@ -4,6 +4,62 @@ import { describe, expect, it } from "vite-plus/test";
+@@ -1,8 +1,65 @@
+-import { getFiletypeFromFileName } from "@pierre/diffs";
++import { getFiletypeFromFileName, getResolvedOrResolveTheme } from "@pierre/diffs";
+ import { describe, expect, it } from "vite-plus/test";
+ 
  import { getSyntaxHighlighterPromise } from "./syntaxHighlighting";
  import { DIFF_THEME_NAMES } from "./diffRendering";
- 
++import { READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
++
 +it.each([
 +  {
 +    appearance: "light" as const,
@@ -134,11 +126,10 @@ index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4d
 +    ).toEqual(expect.arrayContaining([expect.objectContaining({ color: colors[index] })]));
 +  }
 +});
-+
+ 
  describe("dialect file types", () => {
    it.each([
-     ["src/init.luau", "lua"],
-@@ -14,6 +70,22 @@ describe("dialect file types", () => {
+@@ -14,6 +71,49 @@ describe("dialect file types", () => {
    });
  });
  
@@ -155,19 +146,48 @@ index e14431990f10776d73cfcb4fc75722e7a3ec658f..5d96e4e4e81c81549365f6f748c21f4d
 +    expect(removed).toBeDefined();
 +    expect(added).toBeDefined();
 +    expect(removed).not.toBe(added);
++    if (appearance === "light") {
++      const { zed: stock } = await getResolvedOrResolveTheme(
++        READABLE_LIGHT_THEME_NAME,
++        "highlights",
++      );
++      const { zed: custom } = await getResolvedOrResolveTheme(DIFF_THEME_NAMES.light, "highlights");
++      const diffScopes = Object.keys(stock?.style.syntax ?? {}).filter((scope) =>
++        scope.startsWith("diff."),
++      );
++      expect(diffScopes.length).toBeGreaterThan(0);
++      for (const scope of diffScopes) {
++        expect(custom?.style.syntax?.[scope], scope).toEqual(stock?.style.syntax?.[scope]);
++      }
++    }
 +  },
 +);
++
++it.each([
++  ["light", READABLE_LIGHT_THEME_NAME],
++  ["dark", "pierre-dark"],
++] as const)("preserves the %s viewer foregrounds", async (appearance, stockName) => {
++  const { zed: stock } = await getResolvedOrResolveTheme(stockName, "highlights");
++  const { zed: custom } = await getResolvedOrResolveTheme(
++    DIFF_THEME_NAMES[appearance],
++    "highlights",
++  );
++  expect(custom?.style.text).toEqual(stock?.style.text);
++  expect(custom?.style["editor.foreground"]).toEqual(stock?.style["editor.foreground"]);
++});
 +
  it.each([
    "asm",
    "assembly",
 diff --git a/apps/web/src/lib/gruvwareSyntaxTheme.ts b/apps/web/src/lib/gruvwareSyntaxTheme.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64b73b423c
+index 0000000000000000000000000000000000000000..b65c54725c80a3918ceaf180036c0b6e654a97d2
 --- /dev/null
 +++ b/apps/web/src/lib/gruvwareSyntaxTheme.ts
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,115 @@
 +import { getResolvedOrResolveTheme, registerCustomTheme } from "@pierre/diffs";
++
++import { READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
 +
 +export const GRUVWARE_THEME_NAMES = {
 +  light: "gruvware-light",
@@ -253,8 +273,9 @@ index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64
 +  registerCustomTheme(
 +    name,
 +    async () => {
-+      const base = await getResolvedOrResolveTheme(`pierre-${appearance}`, "highlights");
-+      if (!base.zed) throw new Error(`pierre-${appearance} has no Highlights palette`);
++      const baseName = appearance === "light" ? READABLE_LIGHT_THEME_NAME : "pierre-dark";
++      const base = await getResolvedOrResolveTheme(baseName, "highlights");
++      if (!base.zed) throw new Error(`${baseName} has no Highlights palette`);
 +      const palette = palettes[appearance];
 +      const foreground = appearance === "light" ? "#3c3836" : "#d4be98";
 +      const syntax = Object.fromEntries(
@@ -273,7 +294,7 @@ index 0000000000000000000000000000000000000000..d33b3438cfb7794a5045ac0d124f9b64
 +      return {
 +        ...base.zed,
 +        name,
-+        style: { ...base.zed.style, text: foreground, "editor.foreground": foreground, syntax },
++        style: { ...base.zed.style, syntax },
 +      };
 +    },
 +    "zed",

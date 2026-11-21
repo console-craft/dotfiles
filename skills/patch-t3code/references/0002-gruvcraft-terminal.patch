@@ -1,0 +1,112 @@
+diff --git a/apps/web/src/components/ThreadTerminalDrawer.browser.test.tsx b/apps/web/src/components/ThreadTerminalDrawer.browser.test.tsx
+index 7632d01b5f9075a724391762d7fa5ae8bae3358f..b7e1baf498bad86eb791ee87e2cf1685c9993e07 100644
+--- a/apps/web/src/components/ThreadTerminalDrawer.browser.test.tsx
++++ b/apps/web/src/components/ThreadTerminalDrawer.browser.test.tsx
+@@ -19,7 +19,29 @@ import { useTerminalUiStateStore } from "../terminalUiStateStore";
+ import { extractTerminalLinks } from "../terminal-links";
+ import { expect, it, vi } from "vite-plus/test";
+ import { act, fakeTimers, render } from "../../test/render";
+-import ThreadTerminalDrawer from "./ThreadTerminalDrawer";
++import ThreadTerminalDrawer, { terminalThemeFromApp } from "./ThreadTerminalDrawer";
++
++it.each([
++  {
++    appearance: "light",
++    colors:
++      "3c3836 b74444 656f2a 985d08 45707a 8f587c 467356 654735 75685d 9d0006 59651e 864e07 076678 8f3f71 376848 4f3829",
++  },
++  {
++    appearance: "dark",
++    colors:
++      "2b2a29 de9880 bac584 d6b37b 83a598 d4a599 7daea3 d4be98 8b7d71 f4b39b d2dda0 efd094 a3c4ba ebc0b4 a1cdc2 fef5db",
++  },
++])("uses the Gruvcraft ANSI palette in $appearance mode", async ({ appearance, colors }) => {
++  await using screen = await render(
++    <div data-testid="terminal-mount" style={{ colorScheme: appearance }} />,
++  );
++  const mount = screen.getByTestId("terminal-mount").element() as HTMLElement;
++  const toHex = (channel: number) => channel.toString(16).padStart(2, "0");
++  expect(
++    terminalThemeFromApp(mount).palette?.map(({ r, g, b }) => toHex(r) + toHex(g) + toHex(b)),
++  ).toEqual(colors.split(" "));
++});
+ 
+ const fixture = vi.hoisted(() => ({
+   statusByThreadId: new Map<string, "starting" | "running" | "exited">(),
+diff --git a/apps/web/src/components/ThreadTerminalDrawer.tsx b/apps/web/src/components/ThreadTerminalDrawer.tsx
+index 54ae776e18559e04b8b8012ecf7f93fbf196384e..494986456e3d01f6b628caf1e88a053ff2cfd96d 100644
+--- a/apps/web/src/components/ThreadTerminalDrawer.tsx
++++ b/apps/web/src/components/ThreadTerminalDrawer.tsx
+@@ -247,40 +247,40 @@ function hexToGhosttyColor(hex: string): GhosttyColor {
+ 
+ const TERMINAL_PALETTES = {
+   light: [
+-    "#000000",
+-    "#cd3131",
+-    "#107c10",
+-    "#949800",
+-    "#0451a5",
+-    "#bc05bc",
+-    "#0598bc",
+-    "#555555",
+-    "#666666",
+-    "#cd3131",
+-    "#14ce14",
+-    "#b5ba00",
+-    "#0451a5",
+-    "#bc05bc",
+-    "#0598bc",
+-    "#a5a5a5",
++    "#3c3836",
++    "#b74444",
++    "#656f2a",
++    "#985d08",
++    "#45707a",
++    "#8f587c",
++    "#467356",
++    "#654735",
++    "#75685d",
++    "#9d0006",
++    "#59651e",
++    "#864e07",
++    "#076678",
++    "#8f3f71",
++    "#376848",
++    "#4f3829",
+   ].map(hexToGhosttyColor),
+   dark: [
+-    "#000000",
+-    "#cd3131",
+-    "#0dbc79",
+-    "#e5e510",
+-    "#2472c8",
+-    "#bc3fbc",
+-    "#11a8cd",
+-    "#e5e5e5",
+-    "#666666",
+-    "#f14c4c",
+-    "#23d18b",
+-    "#f5f543",
+-    "#3b8eea",
+-    "#d670d6",
+-    "#29b8db",
+-    "#e5e5e5",
++    "#2b2a29",
++    "#de9880",
++    "#bac584",
++    "#d6b37b",
++    "#83a598",
++    "#d4a599",
++    "#7daea3",
++    "#d4be98",
++    "#8b7d71",
++    "#f4b39b",
++    "#d2dda0",
++    "#efd094",
++    "#a3c4ba",
++    "#ebc0b4",
++    "#a1cdc2",
++    "#fef5db",
+   ].map(hexToGhosttyColor),
+ };
+ 
