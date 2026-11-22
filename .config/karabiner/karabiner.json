@@ -4,6 +4,43 @@
       "complex_modifications": {
         "rules": [
           {
+            "description": "Windows App: Command+Option sends Command only",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": [
+                      "^com\\.microsoft\\.rdc\\.macos$"
+                    ],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "any": "key_code",
+                  "modifiers": {
+                    "mandatory": [
+                      "command",
+                      "left_option"
+                    ],
+                    "optional": [
+                      "shift",
+                      "caps_lock"
+                    ]
+                  }
+                },
+                "to": [
+                  {
+                    "from_event": true,
+                    "modifiers": [
+                      "left_command"
+                    ]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          },
+          {
             "description": "Command Option application and window switching",
             "manipulators": [
               {
