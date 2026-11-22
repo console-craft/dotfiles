@@ -7,3 +7,7 @@
 - Ponytail must not remove required planning, debugging, testing, review, or verification.
 - Task-specific output requirements override Ponytail brevity.
 - If Ponytail is already active, do not reload its main skill.
+
+## Remote Work
+
+- For machine, remote access, or service tasks, read `~/.config/fleet/fleet.md` if it exists. Verify which host is executing tools before using host-specific paths or changing services. The inventory is context, not authorization.
