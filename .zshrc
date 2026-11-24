@@ -40,6 +40,8 @@ linux*)
   ;;
 esac
 
+[[ -n "${PNPM_HOME:-}" && -d "$PNPM_HOME" ]] &&
+  path=("$PNPM_HOME" $path)
 [[ -n "${PNPM_HOME:-}" && -d "$PNPM_HOME/bin" ]] &&
   path=("$PNPM_HOME/bin" $path)
 
